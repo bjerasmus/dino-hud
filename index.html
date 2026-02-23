@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Battle Royale HUD</title>
+    <style>
+        :root {
+            /* Color Palette - Japanese Village + Deathmatch */
+            --wood-dark: #2D1B0F;
+            --wood-medium: #4A2F1A;
+            --moss-green: #556B2F;
+            --amber-warm: #FFB347;
+            --amber-dark: #D4954E;
+            --health-green: #39FF14;
+            --health-amber: #FFB347;
+            --health-red: #FF3333;
+            --overheal-blue: #00BFFF;
+            --text-primary: #F5E6D3;
+            --text-shadow: rgba(0, 0, 0, 0.8);
+            --panel-bg: rgba(20, 12, 8, 0.85);
+            --panel-border: #4A2F1A;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            color: var(--text-primary);
+            pointer-events: none;
+            user-select: none;
+            position: relative;
+        }
+
+        /* Scanline overlay for retro feel */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.05) 0px,
+                rgba(0, 0, 0, 0.05) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Damage flash overlay */
+        #damage-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(255, 0, 0, 0.3) 100%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.1s ease-out;
+        }
+
+        #damage-flash.active {
+            animation: damageFlash 0.3s ease-out;
+        }
+
+        @keyframes damageFlash {
+            0% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+
+        /* Panel base style */
+        .panel {
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            padding: 12px 16px;
+            backdrop-filter: blur(4px);
+            position: relative;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                rgba(74, 47, 26, 0.1) 1px,
+                transparent 2px,
+                transparent 8px
+            );
+            pointer-events: none;
+        }
+
+        /* Bottom-Left: Health Display */
+        #health-container {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        #health-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+        }
+
+        #health-icon {
+            font-size: 32px;
+            filter: drop-shadow(0 0 4px var(--health-green));
+        }
+
+        #health-value {
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--text-shadow), 0 0 8px currentColor;
+            color: var(--health-green);
+            min-width: 80px;
+        }
+
+        #health-value.low {
+            color: var(--health-amber);
+        }
+
+        #health-value.critical {
+            color: var(--health-red);
+            animation: pulse 0.5s infinite;
+        }
+
+        #health-value.overheal {
+            color: var(--overheal-blue);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        #health-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--panel-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #health-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--health-green), #2ECC71);
+            transition: width 0.3s ease-out, background 0.3s ease;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        #health-bar.low {
+            background: linear-gradient(90deg, var(--health-amber), #E67E22);
+        }
+
+        #health-bar.critical {
+            background: linear-gradient(90deg, var(--health-red), #C0392B);
+        }
+
+        #health-bar.overheal {
+            background: linear-gradient(90deg, var(--overheal-blue), #1E90FF);
+        }
+
+        /* Bottom-Right: Weapon & Ammo */
+        #weapon-container {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            z-index: 100;
+        }
+
+        #weapon-name {
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--text-shadow);
+            color: var(--amber-warm);
+            letter-spacing: 2px;
+        }
+
+        #weapon-ammo {
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--text-shadow);
+            color: var(--text-primary);
+        }
+
+        /* Top-Right: Score */
+        #score-container {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            text-align: right;
+            z-index: 100;
+        }
+
+        #score-kills-deaths {
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--text-shadow);
+            margin-bottom: 4px;
+        }
+
+        .score-label {
+            color: var(--amber-warm);
+        }
+
+        #score-ratio {
+            font-size: 16px;
+            color: var(--text-primary);
+            opacity: 0.8;
+            text-shadow: 1px 1px 2px var(--text-shadow);
+        }
+
+        /* Top-Left: Mini-Map */
+        #minimap-container {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 100;
+        }
+
+        #minimap {
+            width: 180px;
+            height: 180px;
+            background: rgba(10, 6, 4, 0.9);
+            border: 2px solid var(--panel-border);
+            padding: 8px;
+        }
+
+        .minimap-building {
+            fill: var(--wood-medium);
+            stroke: var(--panel-border);
+            stroke-width: 1;
+            opacity: 0.7;
+        }
+
+        .minimap-player {
+            fill: var(--amber-warm);
+            filter: drop-shadow(0 0 4px var(--amber-warm));
+            animation: playerPulse 1.5s infinite;
+        }
+
+        @keyframes playerPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        /* Top-Center: Match Timer */
+        #timer-container {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        #timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px var(--text-shadow);
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        #timer-display.warning {
+            color: var(--health-red);
+            animation: timerFlash 0.5s infinite;
+        }
+
+        @keyframes timerFlash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Center: Crosshair */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            z-index: 50;
+            transition: all 0.2s ease;
+        }
+
+        #crosshair.boosted {
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+
+        .crosshair-line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .crosshair-h {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .crosshair-v {
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair-gap {
+            position: absolute;
+            background: transparent;
+        }
+
+        .crosshair-gap-h {
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 2px;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-gap-v {
+            left: 50%;
+            top: 50%;
+            width: 2px;
+            height: 8px;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Center: Kill Feed */
+        #killfeed-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, calc(-50% + 80px));
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .killfeed-message {
+            background: rgba(139, 0, 0, 0.8);
+            border: 2px solid var(--health-red);
+            padding: 12px 24px;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px var(--text-shadow);
+            color: #FFF;
+            animation: killFade 2s ease-out forwards;
+            letter-spacing: 1px;
+        }
+
+        @keyframes killFade {
+            0% { opacity: 0; transform: translateY(-20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+
+        /* Boost Indicator */
+        #boost-indicator {
+            position: fixed;
+            bottom: 120px;
+            left: 40px;
+            padding: 8px 16px;
+            background: rgba(255, 179, 71, 0.2);
+            border: 2px solid var(--amber-warm);
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--amber-warm);
+            text-shadow: 2px 2px 4px var(--text-shadow);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 179, 71, 0.4);
+            z-index: 100;
+        }
+
+        #boost-indicator.active {
+            opacity: 1;
+            animation: boostGlow 1s infinite;
+        }
+
+        @keyframes boostGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 179, 71, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 179, 71, 0.8); }
+        }
+
+        /* Game Over / Match Start */
+        #game-state-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 4px 4px 8px var(--text-shadow);
+            color: var(--amber-warm);
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+
+        #game-state-overlay.active {
+            opacity: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #health-value { font-size: 36px; }
+            #weapon-name { font-size: 20px; }
+            #weapon-ammo { font-size: 28px; }
+            #score-kills-deaths { font-size: 24px; }
+            #timer-display { font-size: 36px; }
+            #minimap { width: 120px; height: 120px; }
+            #game-state-overlay { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Damage Flash -->
+    <div id="damage-flash"></div>
+
+    <!-- Bottom-Left: Health -->
+    <div id="health-container">
+        <div id="health-display" class="panel">
+            <div id="health-icon">💀</div>
+            <div id="health-value">100</div>
+        </div>
+        <div id="health-bar-container">
+            <div id="health-bar" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Boost Indicator -->
+    <div id="boost-indicator">⚡ BOOSTED</div>
+
+    <!-- Bottom-Right: Weapon & Ammo -->
+    <div id="weapon-container">
+        <div id="weapon-name" class="panel">UNARMED</div>
+        <div id="weapon-ammo" class="panel">---</div>
+    </div>
+
+    <!-- Top-Right: Score -->
+    <div id="score-container">
+        <div id="score-kills-deaths" class="panel">
+            <span class="score-label">K:</span> <span id="kills">0</span>
+            <span style="margin: 0 8px;">|</span>
+            <span class="score-label">D:</span> <span id="deaths">0</span>
+        </div>
+        <div id="score-ratio" class="panel">K/D: <span id="kd-ratio">0.00</span></div>
+    </div>
+
+    <!-- Top-Left: Mini-Map -->
+    <div id="minimap-container">
+        <svg id="minimap" viewBox="-350 -250 300 300">
+            <!-- Arena boundary -->
+            <rect x="-330" y="-220" width="240" height="260"
+                  fill="none" stroke="rgba(85, 107, 47, 0.5)" stroke-width="2"/>
+
+            <!-- Building clusters (simplified landmarks) -->
+            <!-- Central cluster -->
+            <rect class="minimap-building" x="-190" y="-100" width="30" height="30"/>
+            <rect class="minimap-building" x="-165" y="-95" width="20" height="25"/>
+
+            <!-- West cluster -->
+            <rect class="minimap-building" x="-250" y="-130" width="35" height="35"/>
+            <rect class="minimap-building" x="-245" y="-90" width="25" height="20"/>
+
+            <!-- East cluster -->
+            <rect class="minimap-building" x="-160" y="-70" width="30" height="28"/>
+            <rect class="minimap-building" x="-155" y="-40" width="22" height="22"/>
+
+            <!-- North cluster -->
+            <rect class="minimap-building" x="-210" y="-180" width="28" height="28"/>
+
+            <!-- South cluster -->
+            <rect class="minimap-building" x="-195" y="-30" width="25" height="25"/>
+
+            <!-- Player dot (always centered) -->
+            <circle class="minimap-player" cx="-180" cy="-90" r="5"/>
+        </svg>
+    </div>
+
+    <!-- Top-Center: Timer -->
+    <div id="timer-container">
+        <div id="timer-display" class="panel">5:00</div>
+    </div>
+
+    <!-- Center: Crosshair -->
+    <div id="crosshair">
+        <div class="crosshair-line crosshair-h"></div>
+        <div class="crosshair-line crosshair-v"></div>
+        <div class="crosshair-gap crosshair-gap-h"></div>
+        <div class="crosshair-gap crosshair-gap-v"></div>
+    </div>
+
+    <!-- Center: Kill Feed -->
+    <div id="killfeed-container"></div>
+
+    <!-- Game State Overlay -->
+    <div id="game-state-overlay"></div>
+
+    <script>
+        // Game State
+        let state = {
+            health: 100,
+            maxHealth: 100,
+            kills: 0,
+            deaths: 0,
+            weapon: 0, // 0 = unarmed, 1 = armed
+            boosted: 0,
+            timer: 300, // seconds
+            matchActive: 1,
+            lastHealth: 100
+        };
+
+        // DOM Elements
+        const healthValue = document.getElementById('health-value');
+        const healthBar = document.getElementById('health-bar');
+        const damageFlash = document.getElementById('damage-flash');
+        const weaponName = document.getElementById('weapon-name');
+        const weaponAmmo = document.getElementById('weapon-ammo');
+        const killsElement = document.getElementById('kills');
+        const deathsElement = document.getElementById('deaths');
+        const kdRatio = document.getElementById('kd-ratio');
+        const timerDisplay = document.getElementById('timer-display');
+        const killfeedContainer = document.getElementById('killfeed-container');
+        const boostIndicator = document.getElementById('boost-indicator');
+        const gameStateOverlay = document.getElementById('game-state-overlay');
+        const crosshair = document.getElementById('crosshair');
+
+        // Update Health Display
+        function updateHealth(value) {
+            const health = Math.max(0, value);
+            state.health = health;
+
+            // Trigger damage flash if health decreased
+            if (health < state.lastHealth) {
+                damageFlash.classList.add('active');
+                setTimeout(() => damageFlash.classList.remove('active'), 300);
+            }
+            state.lastHealth = health;
+
+            healthValue.textContent = Math.floor(health);
+
+            // Calculate bar width (max at 200 for overheal)
+            const barWidth = Math.min((health / 200) * 100, 100);
+            healthBar.style.width = barWidth + '%';
+
+            // Remove all state classes
+            healthValue.classList.remove('low', 'critical', 'overheal');
+            healthBar.classList.remove('low', 'critical', 'overheal');
+
+            // Apply appropriate state
+            if (health > 100) {
+                healthValue.classList.add('overheal');
+                healthBar.classList.add('overheal');
+            } else if (health < 20) {
+                healthValue.classList.add('critical');
+                healthBar.classList.add('critical');
+            } else if (health < 60) {
+                healthValue.classList.add('low');
+                healthBar.classList.add('low');
+            }
+        }
+
+        // Update Weapon Display
+        function updateWeapon(hasGun) {
+            state.weapon = hasGun;
+
+            if (hasGun === 0) {
+                weaponName.textContent = 'UNARMED';
+                weaponAmmo.textContent = '---';
+            } else {
+                // In this game, we just show "ARMED" with INF ammo
+                // Could be enhanced to show specific weapon type
+                weaponName.textContent = 'ARMED';
+                weaponAmmo.textContent = 'INF';
+            }
+        }
+
+        // Update Score
+        function updateScore() {
+            killsElement.textContent = state.kills;
+            deathsElement.textContent = state.deaths;
+
+            const ratio = state.deaths === 0 ? state.kills.toFixed(2) : (state.kills / state.deaths).toFixed(2);
+            kdRatio.textContent = ratio;
+        }
+
+        // Update Timer
+        function updateTimer(seconds) {
+            state.timer = Math.max(0, seconds);
+
+            const mins = Math.floor(state.timer / 60);
+            const secs = state.timer % 60;
+            const formatted = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            timerDisplay.textContent = formatted;
+
+            // Flash warning when < 30 seconds
+            if (state.timer < 30 && state.timer > 0) {
+                timerDisplay.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+            }
+
+            // Show MATCH OVER when timer hits 0
+            if (state.timer === 0) {
+                timerDisplay.textContent = 'MATCH OVER';
+            }
+        }
+
+        // Add Kill to Feed
+        function addKillFeed(playerName = 'PLAYER') {
+            const message = document.createElement('div');
+            message.className = 'killfeed-message';
+            message.textContent = `YOU KILLED ${playerName}`;
+
+            killfeedContainer.appendChild(message);
+
+            // Remove after animation completes
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 2000);
+
+            // Keep only last 3 messages
+            while (killfeedContainer.children.length > 3) {
+                killfeedContainer.removeChild(killfeedContainer.firstChild);
+            }
+        }
+
+        // Update Boost Indicator
+        function updateBoost(boosted) {
+            state.boosted = boosted;
+
+            if (boosted === 1) {
+                boostIndicator.classList.add('active');
+                crosshair.classList.add('boosted');
+            } else {
+                boostIndicator.classList.remove('active');
+                crosshair.classList.remove('boosted');
+            }
+        }
+
+        // Show Game State Message
+        function showGameState(message, duration = 3000) {
+            gameStateOverlay.textContent = message;
+            gameStateOverlay.classList.add('active');
+
+            setTimeout(() => {
+                gameStateOverlay.classList.remove('active');
+            }, duration);
+        }
+
+        // Handle Portals Messages
+        function handlePortalsMessage(msg) {
+            if (typeof msg !== 'string') return;
+
+            const parts = msg.split('_');
+            if (parts.length !== 2) return;
+
+            const [type, valueStr] = parts;
+            const value = parseFloat(valueStr);
+
+            switch (type) {
+                case 'health':
+                    updateHealth(value);
+                    break;
+
+                case 'kill':
+                    state.kills = value;
+                    updateScore();
+                    if (value > 0) {
+                        addKillFeed();
+                    }
+                    break;
+
+                case 'death':
+                    state.deaths = value;
+                    updateScore();
+                    break;
+
+                case 'weapon':
+                    updateWeapon(value);
+                    break;
+
+                case 'boost':
+                    updateBoost(value);
+                    break;
+
+                case 'timer':
+                    updateTimer(value);
+                    break;
+
+                case 'start':
+                    if (value === 1) {
+                        showGameState('MATCH STARTED', 2000);
+                    }
+                    break;
+
+                case 'gameover':
+                    if (value === 1) {
+                        showGameState('MATCH OVER', 5000);
+                    }
+                    break;
+
+                case 'dead':
+                    if (value === 1) {
+                        showGameState('YOU DIED', 2000);
+                    }
+                    break;
+
+                case 'respawn':
+                    if (value === 1) {
+                        updateHealth(100);
+                    }
+                    break;
+            }
+        }
+
+        // Listen for messages from Portals
+        window.addEventListener('message', function(event) {
+            const msg = event.data;
+            if (typeof msg === 'string') {
+                handlePortalsMessage(msg);
+            } else if (msg && msg.type === 'portals') {
+                handlePortalsMessage(msg.data);
+            }
+        });
+
+        // Initialize
+        updateHealth(100);
+        updateWeapon(0);
+        updateScore();
+        updateTimer(300);
+        updateBoost(0);
+
+        // Timer countdown (client-side visual only, server is source of truth)
+        setInterval(() => {
+            if (state.matchActive && state.timer > 0) {
+                updateTimer(state.timer - 1);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
