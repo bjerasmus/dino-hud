@@ -130,9 +130,42 @@ body {
   0%, 100% { background: yellow; }
   50% { background: orange; }
 }
+
+/* Mini-map container */
+#minimap-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 180px;
+  height: 180px;
+  z-index: 100;
+  background: rgba(0,0,0,0.25);
+  border: 2px solid #00ffff;
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 0 10px #00ffff;
+}
+
+#minimap {
+  width: 100%;
+  height: 100%;
+}
+
+.minimap-building {
+  fill: #00ffff;
+  stroke: #00ffff;
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.minimap-player {
+  fill: #ff0;
+  filter: drop-shadow(0 0 4px #ff0);
+}
 </style>
 </head>
 <body>
+
 <div id="hud">
   <div class="bar-container">
     <div id="health-bar" class="bar"></div>
@@ -158,78 +191,93 @@ body {
   </div>
 </div>
 
+<!-- Mini-map -->
+<div id="minimap-container">
+  <svg id="minimap" viewBox="-350 -250 300 300">
+    <rect x="-330" y="-220" width="240" height="260" fill="none" stroke="rgba(0, 255, 255, 0.5)" stroke-width="2"/>
+    <rect class="minimap-building" x="-190" y="-100" width="30" height="30"/>
+    <rect class="minimap-building" x="-165" y="-95" width="20" height="25"/>
+    <rect class="minimap-building" x="-250" y="-130" width="35" height="35"/>
+    <rect class="minimap-building" x="-245" y="-90" width="25" height="20"/>
+    <rect class="minimap-building" x="-160" y="-70" width="30" height="28"/>
+    <rect class="minimap-building" x="-155" y="-40" width="22" height="22"/>
+    <rect class="minimap-building" x="-210" y="-180" width="28" height="28"/>
+    <rect class="minimap-building" x="-195" y="-30" width="25" height="25"/>
+    <circle class="minimap-player" cx="-180" cy="-90" r="5"/>
+  </svg>
+</div>
+
 <script>
-  // HUD update functions
-  function updateHealth(current, max) {
-    const bar = document.getElementById('health-bar');
-    const percent = (current / max) * 100;
-    bar.style.width = percent + '%';
-    if(percent < 25) {
-      bar.classList.add('low-health');
-    } else {
-      bar.classList.remove('low-health');
-    }
+// HUD update functions
+function updateHealth(current, max) {
+  const bar = document.getElementById('health-bar');
+  const percent = (current / max) * 100;
+  bar.style.width = percent + '%';
+  if(percent < 25) {
+    bar.classList.add('low-health');
+  } else {
+    bar.classList.remove('low-health');
   }
+}
 
-  function updateArmor(current, max) {
-    const bar = document.getElementById('armor-bar');
-    const percent = (current / max) * 100;
-    bar.style.width = percent + '%';
+function updateArmor(current, max) {
+  const bar = document.getElementById('armor-bar');
+  const percent = (current / max) * 100;
+  bar.style.width = percent + '%';
+}
+
+function updateKills(kills) {
+  document.getElementById('kills').innerText = 'Kills: ' + kills;
+  updateKDR();
+}
+
+function updateDeaths(deaths) {
+  document.getElementById('deaths').innerText = 'Deaths: ' + deaths;
+  updateKDR();
+}
+
+function updateKDR() {
+  const kills = parseInt(document.getElementById('kills').innerText.split(': ')[1]);
+  const deaths = parseInt(document.getElementById('deaths').innerText.split(': ')[1]);
+  const kdr = deaths === 0 ? kills : (kills / deaths).toFixed(2);
+  document.getElementById('kdr').innerText = 'K/D: ' + kdr;
+}
+
+function updateWeapon(name, icon, ammo) {
+  const weaponIcon = document.getElementById('weapon-icon');
+  const ammoElem = document.getElementById('ammo');
+  weaponIcon.src = icon;
+  ammoElem.innerText = ammo;
+  if(ammo < 5) {
+    ammoElem.classList.add('low-ammo');
+  } else {
+    ammoElem.classList.remove('low-ammo');
   }
+}
 
-  function updateKills(kills) {
-    document.getElementById('kills').innerText = 'Kills: ' + kills;
-    updateKDR();
+function updateSquad(name) {
+  document.getElementById('squad').innerText = 'Squad: ' + name;
+}
+
+function updatePowerup(id, label, seconds) {
+  const elem = document.getElementById(id);
+  elem.innerText = label + ' ' + seconds + 's';
+}
+
+// Listen for messages from parent game
+window.addEventListener('message', (event) => {
+  const data = event.data;
+
+  if(data.health !== undefined && data.maxHealth !== undefined) updateHealth(data.health, data.maxHealth);
+  if(data.armor !== undefined && data.maxArmor !== undefined) updateArmor(data.armor, data.maxArmor);
+  if(data.kills !== undefined) updateKills(data.kills);
+  if(data.deaths !== undefined) updateDeaths(data.deaths);
+  if(data.weapon !== undefined) updateWeapon(data.weapon.name, data.weapon.icon, data.weapon.ammo);
+  if(data.squad !== undefined) updateSquad(data.squad);
+  if(data.powerups !== undefined) {
+    data.powerups.forEach(p => updatePowerup(p.id, p.label, p.seconds));
   }
-
-  function updateDeaths(deaths) {
-    document.getElementById('deaths').innerText = 'Deaths: ' + deaths;
-    updateKDR();
-  }
-
-  function updateKDR() {
-    const kills = parseInt(document.getElementById('kills').innerText.split(': ')[1]);
-    const deaths = parseInt(document.getElementById('deaths').innerText.split(': ')[1]);
-    const kdr = deaths === 0 ? kills : (kills / deaths).toFixed(2);
-    document.getElementById('kdr').innerText = 'K/D: ' + kdr;
-  }
-
-  function updateWeapon(name, icon, ammo) {
-    const weaponIcon = document.getElementById('weapon-icon');
-    const ammoElem = document.getElementById('ammo');
-    weaponIcon.src = icon;
-    ammoElem.innerText = ammo;
-    if(ammo < 5) {
-      ammoElem.classList.add('low-ammo');
-    } else {
-      ammoElem.classList.remove('low-ammo');
-    }
-  }
-
-  function updateSquad(name) {
-    document.getElementById('squad').innerText = 'Squad: ' + name;
-  }
-
-  function updatePowerup(id, label, seconds) {
-    const elem = document.getElementById(id);
-    elem.innerText = label + ' ' + seconds + 's';
-  }
-
-  // Listen for messages from parent game
-  window.addEventListener('message', (event) => {
-    const data = event.data;
-
-    if(data.health !== undefined && data.maxHealth !== undefined) updateHealth(data.health, data.maxHealth);
-    if(data.armor !== undefined && data.maxArmor !== undefined) updateArmor(data.armor, data.maxArmor);
-    if(data.kills !== undefined) updateKills(data.kills);
-    if(data.deaths !== undefined) updateDeaths(data.deaths);
-    if(data.weapon !== undefined) updateWeapon(data.weapon.name, data.weapon.icon, data.weapon.ammo);
-    if(data.squad !== undefined) updateSquad(data.squad);
-    if(data.powerups !== undefined) {
-      data.powerups.forEach(p => updatePowerup(p.id, p.label, p.seconds));
-    }
-  });
+});
 </script>
 </body>
 </html>
-
