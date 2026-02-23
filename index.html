@@ -144,6 +144,7 @@ body {
   border-radius: 10px;
   padding: 4px;
   box-shadow: 0 0 10px #00ffff;
+  overflow: hidden;
 }
 
 #minimap {
@@ -151,6 +152,7 @@ body {
   height: 100%;
 }
 
+/* Buildings */
 .minimap-building {
   fill: #00ffff;
   stroke: #00ffff;
@@ -158,14 +160,42 @@ body {
   opacity: 0.6;
 }
 
+/* Player / other players */
 .minimap-player {
   fill: #ff0;
   filter: drop-shadow(0 0 4px #ff0);
+  transition: cx 0.1s, cy 0.1s;
+}
+
+/* Squad members */
+.minimap-squad {
+  fill: #0f0;
+  filter: drop-shadow(0 0 4px #0f0);
+  transition: cx 0.1s, cy 0.1s;
+}
+
+/* Pulse animation for moving entities */
+@keyframes pulse {
+  0% { r: 4; opacity: 0.6; }
+  50% { r: 6; opacity: 1; }
+  100% { r: 4; opacity: 0.6; }
+}
+
+.pulse {
+  animation: pulse 1s infinite;
+}
+
+/* Player direction arrow */
+#player-arrow {
+  fill: #ff0;
+  stroke: #ff0;
+  stroke-width: 1;
 }
 </style>
 </head>
 <body>
 
+<!-- HUD -->
 <div id="hud">
   <div class="bar-container">
     <div id="health-bar" class="bar"></div>
@@ -195,6 +225,7 @@ body {
 <div id="minimap-container">
   <svg id="minimap" viewBox="-350 -250 300 300">
     <rect x="-330" y="-220" width="240" height="260" fill="none" stroke="rgba(0, 255, 255, 0.5)" stroke-width="2"/>
+    <!-- Buildings -->
     <rect class="minimap-building" x="-190" y="-100" width="30" height="30"/>
     <rect class="minimap-building" x="-165" y="-95" width="20" height="25"/>
     <rect class="minimap-building" x="-250" y="-130" width="35" height="35"/>
@@ -203,27 +234,25 @@ body {
     <rect class="minimap-building" x="-155" y="-40" width="22" height="22"/>
     <rect class="minimap-building" x="-210" y="-180" width="28" height="28"/>
     <rect class="minimap-building" x="-195" y="-30" width="25" height="25"/>
-    <circle class="minimap-player" cx="-180" cy="-90" r="5"/>
+    <!-- Player -->
+    <circle id="player-dot" class="minimap-player" cx="-180" cy="-90" r="5"/>
+    <polygon id="player-arrow" points="-180,-90 -185,-85 -175,-85"/>
   </svg>
 </div>
 
 <script>
-// HUD update functions
+// --- HUD Update Functions ---
 function updateHealth(current, max) {
   const bar = document.getElementById('health-bar');
   const percent = (current / max) * 100;
   bar.style.width = percent + '%';
-  if(percent < 25) {
-    bar.classList.add('low-health');
-  } else {
-    bar.classList.remove('low-health');
-  }
+  if(percent < 25) bar.classList.add('low-health');
+  else bar.classList.remove('low-health');
 }
 
 function updateArmor(current, max) {
   const bar = document.getElementById('armor-bar');
-  const percent = (current / max) * 100;
-  bar.style.width = percent + '%';
+  bar.style.width = (current / max * 100) + '%';
 }
 
 function updateKills(kills) {
@@ -248,11 +277,8 @@ function updateWeapon(name, icon, ammo) {
   const ammoElem = document.getElementById('ammo');
   weaponIcon.src = icon;
   ammoElem.innerText = ammo;
-  if(ammo < 5) {
-    ammoElem.classList.add('low-ammo');
-  } else {
-    ammoElem.classList.remove('low-ammo');
-  }
+  if(ammo < 5) ammoElem.classList.add('low-ammo');
+  else ammoElem.classList.remove('low-ammo');
 }
 
 function updateSquad(name) {
@@ -264,19 +290,57 @@ function updatePowerup(id, label, seconds) {
   elem.innerText = label + ' ' + seconds + 's';
 }
 
-// Listen for messages from parent game
+// --- Mini-map Functions ---
+const minimap = document.getElementById('minimap');
+const playerDot = document.getElementById('player-dot');
+const playerArrow = document.getElementById('player-arrow');
+let entityDots = {}; // {id: SVGCircleElement}
+
+function updateMinimap(data) {
+  if(data.player) {
+    const {x, y, rotation} = data.player;
+    playerDot.setAttribute('cx', x);
+    playerDot.setAttribute('cy', y);
+    // Rotate arrow
+    const size = 10;
+    const rad = rotation * (Math.PI/180);
+    const px = x;
+    const py = y;
+    const p1x = px + size * Math.sin(rad);
+    const p1y = py - size * Math.cos(rad);
+    const p2x = px - size/2 * Math.cos(rad);
+    const p2y = py - size/2 * Math.sin(rad);
+    const p3x = px + size/2 * Math.cos(rad);
+    const p3y = py + size/2 * Math.sin(rad);
+    playerArrow.setAttribute('points', `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`);
+  }
+  if(data.entities) {
+    data.entities.forEach(e => {
+      let dot = entityDots[e.id];
+      if(!dot) {
+        dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute('r', 5);
+        dot.classList.add(e.squad ? 'minimap-squad' : 'minimap-player', 'pulse');
+        minimap.appendChild(dot);
+        entityDots[e.id] = dot;
+      }
+      dot.setAttribute('cx', e.x);
+      dot.setAttribute('cy', e.y);
+    });
+  }
+}
+
+// --- Listen for messages ---
 window.addEventListener('message', (event) => {
   const data = event.data;
-
   if(data.health !== undefined && data.maxHealth !== undefined) updateHealth(data.health, data.maxHealth);
   if(data.armor !== undefined && data.maxArmor !== undefined) updateArmor(data.armor, data.maxArmor);
   if(data.kills !== undefined) updateKills(data.kills);
   if(data.deaths !== undefined) updateDeaths(data.deaths);
   if(data.weapon !== undefined) updateWeapon(data.weapon.name, data.weapon.icon, data.weapon.ammo);
   if(data.squad !== undefined) updateSquad(data.squad);
-  if(data.powerups !== undefined) {
-    data.powerups.forEach(p => updatePowerup(p.id, p.label, p.seconds));
-  }
+  if(data.powerups !== undefined) data.powerups.forEach(p => updatePowerup(p.id, p.label, p.seconds));
+  if(data.minimap) updateMinimap(data.minimap);
 });
 </script>
 </body>
