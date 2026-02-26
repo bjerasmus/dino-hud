@@ -245,28 +245,40 @@
             animation: pulseRed 0.8s ease-in-out infinite;
         }
 
-        /* ═══ Top-Right: MINIMAP placeholder ═══ */
-        .minimap {
+        /* ═══ Top-Right: HUD TOGGLE ═══ */
+        .hud-toggle {
             position: absolute;
-            top: 30px; right: 30px;
-            width: 180px; height: 180px;
-            border-radius: 50%;
-            background: rgba(20,25,30,0.55);
+            top: 20px; right: 20px;
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: rgba(20, 25, 30, 0.65);
             border: 2px solid #3efcff;
-            box-shadow: 0 0 12px #3efcff, inset 0 0 12px rgba(0,255,255,0.1);
+            box-shadow: 0 0 10px rgba(62,252,255,0.4);
             backdrop-filter: blur(6px);
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 1000;
+            transition: all 0.2s ease;
         }
+        .hud-toggle:hover {
+            box-shadow: 0 0 18px rgba(62,252,255,0.7);
+            background: rgba(20, 25, 30, 0.85);
+        }
+        .hud-toggle:active { transform: scale(0.92); }
+        .hud-toggle svg {
+            width: 22px; height: 22px;
+            fill: #3efcff;
+            filter: drop-shadow(0 0 4px #3efcff);
+            transition: opacity 0.2s;
+        }
+        .hud-toggle.hidden svg.eye-open { display: none; }
+        .hud-toggle:not(.hidden) svg.eye-closed { display: none; }
 
-        .minimap-label {
-            font-size: 20px; font-weight: 700;
-            letter-spacing: 4px;
-            text-shadow: 0 0 8px #3efcff;
-            opacity: 0.5;
-        }
+        .hud-elements.hud-hidden { opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+        .hud-elements { transition: opacity 0.25s ease; }
 
         /* ═══ Center: CROSSHAIR ═══ */
         .crosshair {
@@ -437,7 +449,7 @@
             .vitals { width: 200px; }
             .weapon-panel { width: 180px; }
             .score-panel { width: 170px; }
-            .minimap { width: 120px; height: 120px; }
+            .hud-toggle { width: 36px; height: 36px; }
             .overlay-title { font-size: 36px; }
             .timer-display { font-size: 28px; }
             .score-value { font-size: 24px; }
@@ -447,92 +459,100 @@
 </head>
 <body>
     <div class="hud-container">
-        <!-- Damage Flash -->
-        <div class="damage-flash" id="damageFlash"></div>
+        <!-- HUD Toggle Button (always visible, has pointer-events) -->
+        <div class="hud-toggle" id="hudToggle" onclick="toggleHud()">
+            <svg class="eye-open" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+            <svg class="eye-closed" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.8 11.8 0 001 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+            </svg>
+        </div>
 
-        <!-- Bottom-Left: VITALS -->
-        <div class="vitals panel">
-            <div class="health-container">
-                <div class="label">HP</div>
-                <div class="bar-wrapper">
-                    <div class="bar health-bar" id="healthBar" style="width:100%"></div>
-                    <div class="bar-text" id="healthText">100</div>
+        <!-- All toggleable HUD elements -->
+        <div class="hud-elements" id="hudElements">
+            <!-- Damage Flash -->
+            <div class="damage-flash" id="damageFlash"></div>
+
+            <!-- Bottom-Left: VITALS -->
+            <div class="vitals panel">
+                <div class="health-container">
+                    <div class="label">HP</div>
+                    <div class="bar-wrapper">
+                        <div class="bar health-bar" id="healthBar" style="width:100%"></div>
+                        <div class="bar-text" id="healthText">100</div>
+                    </div>
+                </div>
+                <div class="armor-container">
+                    <div class="label">ARMOR</div>
+                    <div class="bar-wrapper">
+                        <div class="bar armor-bar" id="armorBar" style="width:0%"></div>
+                        <div class="bar-text" id="armorText">0</div>
+                    </div>
                 </div>
             </div>
-            <div class="armor-container">
-                <div class="label">ARMOR</div>
-                <div class="bar-wrapper">
-                    <div class="bar armor-bar" id="armorBar" style="width:0%"></div>
-                    <div class="bar-text" id="armorText">0</div>
+
+            <!-- Boost -->
+            <div class="boost-indicator" id="boostIndicator">SPEED BOOST</div>
+
+            <!-- Bottom-Right: WEAPON -->
+            <div class="weapon-panel panel">
+                <div class="weapon-icon" id="weaponIcon">
+                    <svg class="weapon-svg" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="35" y="25" width="50" height="10" rx="2"/>
+                        <circle cx="32" cy="30" r="8"/>
+                    </svg>
                 </div>
+                <div class="weapon-name" id="weaponName">UNARMED</div>
+                <div class="ammo-display" id="ammoDisplay">-- / --</div>
             </div>
-        </div>
 
-        <!-- Boost -->
-        <div class="boost-indicator" id="boostIndicator">SPEED BOOST</div>
-
-        <!-- Bottom-Right: WEAPON -->
-        <div class="weapon-panel panel">
-            <div class="weapon-icon" id="weaponIcon">
-                <svg class="weapon-svg" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="35" y="25" width="50" height="10" rx="2"/>
-                    <circle cx="32" cy="30" r="8"/>
-                </svg>
-            </div>
-            <div class="weapon-name" id="weaponName">UNARMED</div>
-            <div class="ammo-display" id="ammoDisplay">-- / --</div>
-        </div>
-
-        <!-- Top-Left: SCORE -->
-        <div class="score-panel panel">
-            <div class="score-row">
-                <div class="score-item">
-                    <div class="score-label">KILLS</div>
-                    <div class="score-value" id="killsValue">0</div>
+            <!-- Top-Left: SCORE -->
+            <div class="score-panel panel">
+                <div class="score-row">
+                    <div class="score-item">
+                        <div class="score-label">KILLS</div>
+                        <div class="score-value" id="killsValue">0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">DEATHS</div>
+                        <div class="score-value" id="deathsValue">0</div>
+                    </div>
                 </div>
-                <div class="score-item">
-                    <div class="score-label">DEATHS</div>
-                    <div class="score-value" id="deathsValue">0</div>
-                </div>
+                <div class="kd-ratio" id="kdRatio">K/D: 0.00</div>
+                <div class="streak-badge" id="streakBadge"></div>
             </div>
-            <div class="kd-ratio" id="kdRatio">K/D: 0.00</div>
-            <div class="streak-badge" id="streakBadge"></div>
-        </div>
 
-        <!-- Top-Center: TIMER (hidden by default) -->
-        <div class="timer-panel panel" id="timerPanel">
-            <div class="timer-display" id="timerDisplay">5:00</div>
-        </div>
+            <!-- Top-Center: TIMER (hidden by default) -->
+            <div class="timer-panel panel" id="timerPanel">
+                <div class="timer-display" id="timerDisplay">5:00</div>
+            </div>
 
-        <!-- Top-Right: MINIMAP placeholder -->
-        <div class="minimap">
-            <div class="minimap-label">MAP</div>
-        </div>
+            <!-- Crosshair -->
+            <div class="crosshair" id="crosshair">
+                <div class="xh-line xh-top"></div>
+                <div class="xh-line xh-bot"></div>
+                <div class="xh-line xh-lft"></div>
+                <div class="xh-line xh-rgt"></div>
+                <div class="xh-dot"></div>
+            </div>
 
-        <!-- Crosshair -->
-        <div class="crosshair" id="crosshair">
-            <div class="xh-line xh-top"></div>
-            <div class="xh-line xh-bot"></div>
-            <div class="xh-line xh-lft"></div>
-            <div class="xh-line xh-rgt"></div>
-            <div class="xh-dot"></div>
-        </div>
+            <!-- Kill Feed -->
+            <div class="kill-feed" id="killFeed"></div>
 
-        <!-- Kill Feed -->
-        <div class="kill-feed" id="killFeed"></div>
+            <!-- Pickup Flash -->
+            <div class="pickup-flash" id="pickupFlash"></div>
 
-        <!-- Pickup Flash -->
-        <div class="pickup-flash" id="pickupFlash"></div>
+            <!-- Streak Announce -->
+            <div class="streak-announce" id="streakAnnounce">
+                <div class="streak-text" id="streakText"></div>
+            </div>
 
-        <!-- Streak Announce -->
-        <div class="streak-announce" id="streakAnnounce">
-            <div class="streak-text" id="streakText"></div>
-        </div>
-
-        <!-- Game Overlay -->
-        <div class="game-overlay" id="gameOverlay">
-            <div class="overlay-title" id="overlayTitle"></div>
-            <div class="overlay-subtitle" id="overlaySubtitle"></div>
+            <!-- Game Overlay -->
+            <div class="game-overlay" id="gameOverlay">
+                <div class="overlay-title" id="overlayTitle"></div>
+                <div class="overlay-subtitle" id="overlaySubtitle"></div>
+            </div>
         </div>
     </div>
 
@@ -781,6 +801,14 @@
             if (typeof d === 'string') handleMsg(d);
             else if (d && d.type === 'portals') handleMsg(d.data);
         });
+
+        // ══ HUD TOGGLE ══
+        function toggleHud() {
+            const el = $('hudElements');
+            const btn = $('hudToggle');
+            el.classList.toggle('hud-hidden');
+            btn.classList.toggle('hidden');
+        }
 
         // ══ INIT ══
         updateHealth(100);
