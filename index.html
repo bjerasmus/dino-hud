@@ -1,347 +1,774 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>DinoDawgs FPS HUD</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<style>
-body {
-  margin: 0;
-  font-family: 'Orbitron', sans-serif;
-  color: #00ffff;
-  background: transparent;
-  overflow: hidden;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Battle Royale HUD</title>
+    <style>
+        :root {
+            --hud-green: #39FF14;
+            --hud-red: #FF2222;
+            --hud-amber: #FFB347;
+            --hud-blue: #00BFFF;
+            --hud-cyan: #00FFE0;
+            --hud-white: #E8E8E8;
+            --hud-dim: rgba(255,255,255,0.4);
+            --panel-bg: rgba(0, 0, 0, 0.55);
+            --panel-border: rgba(57, 255, 20, 0.25);
+            --glow-green: 0 0 12px rgba(57, 255, 20, 0.6);
+            --glow-red: 0 0 12px rgba(255, 34, 34, 0.6);
+            --glow-blue: 0 0 12px rgba(0, 191, 255, 0.6);
+        }
 
-/* Main HUD container */
-#hud {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 320px;
-  padding: 10px;
-  background: rgba(0,0,0,0.25);
-  border: 2px solid #00ffff;
-  border-radius: 10px;
-  box-shadow: 0 0 15px #00ffff;
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Segmented bars */
-.bar-container {
-  width: 100%;
-  height: 22px;
-  background: rgba(50,50,50,0.5);
-  border: 1px solid #00ffff;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  display: flex;
-  overflow: hidden;
-}
+        html {
+            background: transparent !important;
+        }
 
-.bar {
-  height: 100%;
-  transition: width 0.3s;
-  box-shadow: 0 0 8px #00ffff inset;
-}
+        body {
+            background: transparent !important;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Courier New', 'Lucida Console', monospace;
+            color: var(--hud-white);
+            pointer-events: none;
+            user-select: none;
+            position: relative;
+        }
 
-/* Health bar colors */
-#health-bar {
-  background: linear-gradient(to right, limegreen, #00ff80);
-}
+        /* Subtle scanline overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                rgba(0,0,0,0.03) 1px,
+                transparent 2px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
 
-#armor-bar {
-  background: linear-gradient(to right, dodgerblue, #00cfff);
-}
+        /* Damage vignette flash */
+        #damage-flash {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,0.5) 100%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 998;
+        }
+        #damage-flash.active {
+            animation: dmgFlash 0.35s ease-out;
+        }
+        @keyframes dmgFlash {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
 
-/* Low health flash */
-.low-health {
-  animation: flash-red 1s infinite;
-}
+        /* ── HEALTH (bottom-left) ── */
+        #health-section {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 100;
+        }
+        #health-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 10px 18px 8px 18px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+        }
+        #health-label {
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: var(--hud-dim);
+            text-transform: uppercase;
+        }
+        #health-value {
+            font-size: 52px;
+            font-weight: bold;
+            color: var(--hud-green);
+            text-shadow: var(--glow-green);
+            line-height: 1;
+            min-width: 70px;
+        }
+        #health-value.low { color: var(--hud-amber); text-shadow: 0 0 12px rgba(255,179,71,0.6); }
+        #health-value.critical { color: var(--hud-red); text-shadow: var(--glow-red); animation: pulse 0.5s infinite; }
+        #health-value.overheal { color: var(--hud-blue); text-shadow: var(--glow-blue); }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
 
-@keyframes flash-red {
-  0%, 100% { background: red; }
-  50% { background: darkred; }
-}
+        #health-bar-wrap {
+            width: 220px;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            margin-top: 4px;
+            clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%);
+        }
+        #health-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--hud-green);
+            transition: width 0.3s ease-out, background 0.3s;
+            box-shadow: var(--glow-green);
+        }
+        #health-bar.low { background: var(--hud-amber); box-shadow: 0 0 8px rgba(255,179,71,0.5); }
+        #health-bar.critical { background: var(--hud-red); box-shadow: var(--glow-red); }
+        #health-bar.overheal { background: var(--hud-blue); box-shadow: var(--glow-blue); }
 
-/* Stats panel */
-#stats {
-  margin-top: 8px;
-  background: rgba(0,0,0,0.4);
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #00ffff;
-  box-shadow: 0 0 10px #00ffff inset;
-}
+        /* ── WEAPON + AMMO (bottom-right) ── */
+        #weapon-section {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+        }
+        #weapon-icon-wrap {
+            width: 90px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #weapon-icon-wrap img {
+            max-width: 90px;
+            max-height: 50px;
+            filter: brightness(1.1) drop-shadow(0 0 6px rgba(255,255,255,0.3));
+            display: none;
+        }
+        #weapon-icon-wrap img.visible { display: block; }
 
-#kills, #deaths, #kdr, #squad {
-  margin: 3px 0;
-  font-size: 16px;
-  text-shadow: 0 0 6px #00ffff;
-}
+        #ammo-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px 18px 6px 14px;
+            text-align: right;
+            clip-path: polygon(5% 0, 100% 0, 100% 100%, 0 100%);
+        }
+        #weapon-name {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--hud-dim);
+            text-transform: uppercase;
+        }
+        #ammo-display {
+            font-size: 44px;
+            font-weight: bold;
+            color: var(--hud-white);
+            line-height: 1;
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+        #ammo-display .ammo-reserve {
+            font-size: 22px;
+            color: var(--hud-dim);
+            margin-left: 2px;
+        }
+        #ammo-display.low { color: var(--hud-red); text-shadow: var(--glow-red); }
+        #ammo-display.empty { color: #661111; }
 
-/* Weapon + Ammo display */
-#weapon {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  background: rgba(0,0,0,0.4);
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #00ffff;
-  box-shadow: 0 0 10px #00ffff inset;
-}
+        /* ── SCORE (top-right) ── */
+        #score-section {
+            position: fixed;
+            top: 24px;
+            right: 30px;
+            z-index: 100;
+            text-align: right;
+        }
+        #score-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px 16px;
+            display: inline-flex;
+            gap: 20px;
+            clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%);
+        }
+        .score-item { text-align: center; }
+        .score-num {
+            font-size: 30px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .score-lbl {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--hud-dim);
+            text-transform: uppercase;
+        }
+        #kills-num { color: var(--hud-green); text-shadow: var(--glow-green); }
+        #deaths-num { color: var(--hud-red); text-shadow: var(--glow-red); }
 
-#weapon img {
-  width: 50px;
-  height: 50px;
-  margin-right: 10px;
-  border: 1px solid #00ffff;
-  border-radius: 4px;
-  box-shadow: 0 0 8px #00ffff;
-}
+        /* Kill streak */
+        #streak-section {
+            margin-top: 6px;
+            text-align: right;
+        }
+        #streak-badge {
+            display: none;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--hud-amber);
+            text-shadow: 0 0 10px rgba(255,179,71,0.8);
+            letter-spacing: 2px;
+            animation: streakPulse 1s infinite;
+        }
+        #streak-badge.active { display: inline-block; }
+        @keyframes streakPulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
 
-#ammo {
-  font-size: 20px;
-  text-shadow: 0 0 8px #00ffff;
-}
+        /* ── TIMER (top-center) ── */
+        #timer-section {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+        #timer-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 6px 24px;
+            clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
+        }
+        #timer-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--hud-white);
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+            text-align: center;
+            letter-spacing: 4px;
+        }
+        #timer-display.warning {
+            color: var(--hud-red);
+            text-shadow: var(--glow-red);
+            animation: timerWarn 0.5s infinite;
+        }
+        @keyframes timerWarn { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
 
-/* Power-up display */
-#powerups {
-  margin-top: 10px;
-}
+        /* ── CROSSHAIR (center) ── */
+        #crosshair {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+        }
+        .xh-line {
+            position: absolute;
+            background: rgba(255,255,255,0.7);
+        }
+        .xh-top { width: 2px; height: 12px; left: 50%; top: -18px; transform: translateX(-50%); }
+        .xh-bot { width: 2px; height: 12px; left: 50%; bottom: -18px; transform: translateX(-50%); }
+        .xh-lft { height: 2px; width: 12px; top: 50%; left: -18px; transform: translateY(-50%); }
+        .xh-rgt { height: 2px; width: 12px; top: 50%; right: -18px; transform: translateY(-50%); }
+        .xh-dot {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #crosshair.hit .xh-line { background: var(--hud-red); }
+        #crosshair.hit .xh-dot { background: var(--hud-red); }
 
-.powerup {
-  display: inline-block;
-  background: #ff0;
-  color: #000;
-  padding: 2px 6px;
-  margin-right: 5px;
-  border-radius: 4px;
-  font-weight: bold;
-  text-shadow: 0 0 4px #ff0;
-}
+        /* ── KILL FEED (center-below-crosshair) ── */
+        #killfeed {
+            position: fixed;
+            top: calc(50% + 60px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+            z-index: 200;
+        }
+        .kf-msg {
+            background: rgba(255, 34, 34, 0.7);
+            border-left: 3px solid var(--hud-red);
+            padding: 8px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+            animation: kfSlide 2.5s ease-out forwards;
+        }
+        @keyframes kfSlide {
+            0% { opacity: 0; transform: translateY(-15px) scale(0.95); }
+            8% { opacity: 1; transform: translateY(0) scale(1); }
+            75% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(10px); }
+        }
 
-/* Ammo warning */
-.low-ammo {
-  animation: flash-yellow 1s infinite;
-}
+        /* ── BOOST INDICATOR (above health) ── */
+        #boost-ind {
+            position: fixed;
+            bottom: 110px;
+            left: 30px;
+            z-index: 100;
+            display: none;
+        }
+        #boost-ind.active { display: block; }
+        #boost-tag {
+            background: rgba(0, 191, 255, 0.15);
+            border: 1px solid var(--hud-blue);
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: var(--hud-blue);
+            text-shadow: var(--glow-blue);
+            animation: boostGlow 1.2s infinite;
+        }
+        @keyframes boostGlow {
+            0%,100% { box-shadow: 0 0 8px rgba(0,191,255,0.3); }
+            50% { box-shadow: 0 0 20px rgba(0,191,255,0.6); }
+        }
 
-@keyframes flash-yellow {
-  0%, 100% { background: yellow; }
-  50% { background: orange; }
-}
+        /* ── GAME STATE OVERLAY (center, big text) ── */
+        #game-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 500;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+        #game-overlay.active { opacity: 1; }
+        #game-overlay-text {
+            font-size: 64px;
+            font-weight: bold;
+            letter-spacing: 6px;
+            text-shadow: 0 0 30px rgba(255,255,255,0.5), 3px 3px 8px rgba(0,0,0,0.9);
+        }
+        #game-overlay-sub {
+            font-size: 18px;
+            color: var(--hud-dim);
+            letter-spacing: 4px;
+            margin-top: 8px;
+        }
 
-/* Mini-map container */
-#minimap-container {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  width: 180px;
-  height: 180px;
-  z-index: 100;
-  background: rgba(0,0,0,0.25);
-  border: 2px solid #00ffff;
-  border-radius: 10px;
-  padding: 4px;
-  box-shadow: 0 0 10px #00ffff;
-  overflow: hidden;
-}
+        /* ── PICKUP FLASH (center notification) ── */
+        #pickup-flash {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+        }
+        #pickup-flash.active {
+            animation: pickupAnim 1.8s ease-out forwards;
+        }
+        @keyframes pickupAnim {
+            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
 
-#minimap {
-  width: 100%;
-  height: 100%;
-}
-
-/* Buildings */
-.minimap-building {
-  fill: #00ffff;
-  stroke: #00ffff;
-  stroke-width: 1;
-  opacity: 0.6;
-}
-
-/* Player / other players */
-.minimap-player {
-  fill: #ff0;
-  filter: drop-shadow(0 0 4px #ff0);
-  transition: cx 0.1s, cy 0.1s;
-}
-
-/* Squad members */
-.minimap-squad {
-  fill: #0f0;
-  filter: drop-shadow(0 0 4px #0f0);
-  transition: cx 0.1s, cy 0.1s;
-}
-
-/* Pulse animation for moving entities */
-@keyframes pulse {
-  0% { r: 4; opacity: 0.6; }
-  50% { r: 6; opacity: 1; }
-  100% { r: 4; opacity: 0.6; }
-}
-
-.pulse {
-  animation: pulse 1s infinite;
-}
-
-/* Player direction arrow */
-#player-arrow {
-  fill: #ff0;
-  stroke: #ff0;
-  stroke-width: 1;
-}
-</style>
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #health-value { font-size: 38px; }
+            #ammo-display { font-size: 32px; }
+            .score-num { font-size: 22px; }
+            #timer-display { font-size: 28px; }
+            #game-overlay-text { font-size: 42px; }
+        }
+    </style>
 </head>
 <body>
+    <!-- Damage Flash -->
+    <div id="damage-flash"></div>
 
-<!-- HUD -->
-<div id="hud">
-  <div class="bar-container">
-    <div id="health-bar" class="bar"></div>
-  </div>
-  <div class="bar-container">
-    <div id="armor-bar" class="bar"></div>
-  </div>
+    <!-- Health (bottom-left) -->
+    <div id="health-section">
+        <div id="health-panel">
+            <div>
+                <div id="health-label">HP</div>
+                <div id="health-value">100</div>
+            </div>
+        </div>
+        <div id="health-bar-wrap">
+            <div id="health-bar"></div>
+        </div>
+    </div>
 
-  <div id="stats">
-    <div id="squad">Squad: Alpha</div>
-    <div id="kills">Kills: 0</div>
-    <div id="deaths">Deaths: 0</div>
-    <div id="kdr">K/D: 0.00</div>
-  </div>
+    <!-- Boost Indicator -->
+    <div id="boost-ind">
+        <div id="boost-tag">SPEED BOOST</div>
+    </div>
 
-  <div id="weapon">
-    <img id="weapon-icon" src="rifle.png" alt="Weapon">
-    <span id="ammo">30</span>
-  </div>
+    <!-- Weapon + Ammo (bottom-right) -->
+    <div id="weapon-section">
+        <div id="weapon-icon-wrap">
+            <img id="img-pistol" src="pistol.png" alt="">
+            <img id="img-rifle" src="rifle.png" alt="">
+            <img id="img-shotgun" src="shotgun.png" alt="">
+        </div>
+        <div id="ammo-panel">
+            <div id="weapon-name">UNARMED</div>
+            <div id="ammo-display">--</div>
+        </div>
+    </div>
 
-  <div id="powerups">
-    <div class="powerup" id="boost">⚡ 5s</div>
-  </div>
-</div>
+    <!-- Score (top-right) -->
+    <div id="score-section">
+        <div id="score-panel">
+            <div class="score-item">
+                <div class="score-num" id="kills-num">0</div>
+                <div class="score-lbl">KILLS</div>
+            </div>
+            <div class="score-item">
+                <div class="score-num" id="deaths-num">0</div>
+                <div class="score-lbl">DEATHS</div>
+            </div>
+        </div>
+        <div id="streak-section">
+            <span id="streak-badge"></span>
+        </div>
+    </div>
 
-<!-- Mini-map -->
-<div id="minimap-container">
-  <svg id="minimap" viewBox="-350 -250 300 300">
-    <rect x="-330" y="-220" width="240" height="260" fill="none" stroke="rgba(0, 255, 255, 0.5)" stroke-width="2"/>
-    <!-- Buildings -->
-    <rect class="minimap-building" x="-190" y="-100" width="30" height="30"/>
-    <rect class="minimap-building" x="-165" y="-95" width="20" height="25"/>
-    <rect class="minimap-building" x="-250" y="-130" width="35" height="35"/>
-    <rect class="minimap-building" x="-245" y="-90" width="25" height="20"/>
-    <rect class="minimap-building" x="-160" y="-70" width="30" height="28"/>
-    <rect class="minimap-building" x="-155" y="-40" width="22" height="22"/>
-    <rect class="minimap-building" x="-210" y="-180" width="28" height="28"/>
-    <rect class="minimap-building" x="-195" y="-30" width="25" height="25"/>
-    <!-- Player -->
-    <circle id="player-dot" class="minimap-player" cx="-180" cy="-90" r="5"/>
-    <polygon id="player-arrow" points="-180,-90 -185,-85 -175,-85"/>
-  </svg>
-</div>
+    <!-- Timer (top-center) -->
+    <div id="timer-section">
+        <div id="timer-panel">
+            <div id="timer-display">5:00</div>
+        </div>
+    </div>
 
-<script>
-// --- HUD Update Functions ---
-function updateHealth(current, max) {
-  const bar = document.getElementById('health-bar');
-  const percent = (current / max) * 100;
-  bar.style.width = percent + '%';
-  if(percent < 25) bar.classList.add('low-health');
-  else bar.classList.remove('low-health');
-}
+    <!-- Crosshair (center) -->
+    <div id="crosshair">
+        <div class="xh-line xh-top"></div>
+        <div class="xh-line xh-bot"></div>
+        <div class="xh-line xh-lft"></div>
+        <div class="xh-line xh-rgt"></div>
+        <div class="xh-dot"></div>
+    </div>
 
-function updateArmor(current, max) {
-  const bar = document.getElementById('armor-bar');
-  bar.style.width = (current / max * 100) + '%';
-}
+    <!-- Kill Feed -->
+    <div id="killfeed"></div>
 
-function updateKills(kills) {
-  document.getElementById('kills').innerText = 'Kills: ' + kills;
-  updateKDR();
-}
+    <!-- Pickup Flash -->
+    <div id="pickup-flash"></div>
 
-function updateDeaths(deaths) {
-  document.getElementById('deaths').innerText = 'Deaths: ' + deaths;
-  updateKDR();
-}
+    <!-- Game State Overlay -->
+    <div id="game-overlay">
+        <div id="game-overlay-text"></div>
+        <div id="game-overlay-sub"></div>
+    </div>
 
-function updateKDR() {
-  const kills = parseInt(document.getElementById('kills').innerText.split(': ')[1]);
-  const deaths = parseInt(document.getElementById('deaths').innerText.split(': ')[1]);
-  const kdr = deaths === 0 ? kills : (kills / deaths).toFixed(2);
-  document.getElementById('kdr').innerText = 'K/D: ' + kdr;
-}
+    <script>
+        // ── STATE ──
+        const S = {
+            hp: 100, maxHp: 100,
+            kills: 0, deaths: 0, streak: 0,
+            weapon: 'none', // 'none','pistol','rifle','shotgun'
+            clip: 0, reserve: 0,
+            boosted: false,
+            timer: 300,
+            matchActive: true,
+            lastHp: 100
+        };
 
-function updateWeapon(name, icon, ammo) {
-  const weaponIcon = document.getElementById('weapon-icon');
-  const ammoElem = document.getElementById('ammo');
-  weaponIcon.src = icon;
-  ammoElem.innerText = ammo;
-  if(ammo < 5) ammoElem.classList.add('low-ammo');
-  else ammoElem.classList.remove('low-ammo');
-}
+        // ── DOM ──
+        const $ = id => document.getElementById(id);
+        const hpVal = $('health-value');
+        const hpBar = $('health-bar');
+        const dmgFlash = $('damage-flash');
+        const weapName = $('weapon-name');
+        const ammoDisp = $('ammo-display');
+        const killsNum = $('kills-num');
+        const deathsNum = $('deaths-num');
+        const streakBadge = $('streak-badge');
+        const timerDisp = $('timer-display');
+        const killfeed = $('killfeed');
+        const boostInd = $('boost-ind');
+        const gameOverlay = $('game-overlay');
+        const overlayText = $('game-overlay-text');
+        const overlaySub = $('game-overlay-sub');
+        const crosshair = $('crosshair');
+        const pickupFlash = $('pickup-flash');
+        const imgPistol = $('img-pistol');
+        const imgRifle = $('img-rifle');
+        const imgShotgun = $('img-shotgun');
 
-function updateSquad(name) {
-  document.getElementById('squad').innerText = 'Squad: ' + name;
-}
+        // ── WEAPON IMAGES ──
+        function showWeaponImg(type) {
+            imgPistol.classList.remove('visible');
+            imgRifle.classList.remove('visible');
+            imgShotgun.classList.remove('visible');
+            if (type === 'pistol') imgPistol.classList.add('visible');
+            else if (type === 'rifle') imgRifle.classList.add('visible');
+            else if (type === 'shotgun') imgShotgun.classList.add('visible');
+        }
 
-function updatePowerup(id, label, seconds) {
-  const elem = document.getElementById(id);
-  elem.innerText = label + ' ' + seconds + 's';
-}
+        // ── HEALTH ──
+        function updateHealth(val) {
+            const hp = Math.max(0, val);
+            S.hp = hp;
 
-// --- Mini-map Functions ---
-const minimap = document.getElementById('minimap');
-const playerDot = document.getElementById('player-dot');
-const playerArrow = document.getElementById('player-arrow');
-let entityDots = {}; // {id: SVGCircleElement}
+            if (hp < S.lastHp) {
+                dmgFlash.classList.add('active');
+                setTimeout(() => dmgFlash.classList.remove('active'), 350);
+            }
+            S.lastHp = hp;
 
-function updateMinimap(data) {
-  if(data.player) {
-    const {x, y, rotation} = data.player;
-    playerDot.setAttribute('cx', x);
-    playerDot.setAttribute('cy', y);
-    // Rotate arrow
-    const size = 10;
-    const rad = rotation * (Math.PI/180);
-    const px = x;
-    const py = y;
-    const p1x = px + size * Math.sin(rad);
-    const p1y = py - size * Math.cos(rad);
-    const p2x = px - size/2 * Math.cos(rad);
-    const p2y = py - size/2 * Math.sin(rad);
-    const p3x = px + size/2 * Math.cos(rad);
-    const p3y = py + size/2 * Math.sin(rad);
-    playerArrow.setAttribute('points', `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`);
-  }
-  if(data.entities) {
-    data.entities.forEach(e => {
-      let dot = entityDots[e.id];
-      if(!dot) {
-        dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        dot.setAttribute('r', 5);
-        dot.classList.add(e.squad ? 'minimap-squad' : 'minimap-player', 'pulse');
-        minimap.appendChild(dot);
-        entityDots[e.id] = dot;
-      }
-      dot.setAttribute('cx', e.x);
-      dot.setAttribute('cy', e.y);
-    });
-  }
-}
+            hpVal.textContent = Math.floor(hp);
 
-// --- Listen for messages ---
-window.addEventListener('message', (event) => {
-  const data = event.data;
-  if(data.health !== undefined && data.maxHealth !== undefined) updateHealth(data.health, data.maxHealth);
-  if(data.armor !== undefined && data.maxArmor !== undefined) updateArmor(data.armor, data.maxArmor);
-  if(data.kills !== undefined) updateKills(data.kills);
-  if(data.deaths !== undefined) updateDeaths(data.deaths);
-  if(data.weapon !== undefined) updateWeapon(data.weapon.name, data.weapon.icon, data.weapon.ammo);
-  if(data.squad !== undefined) updateSquad(data.squad);
-  if(data.powerups !== undefined) data.powerups.forEach(p => updatePowerup(p.id, p.label, p.seconds));
-  if(data.minimap) updateMinimap(data.minimap);
-});
-</script>
+            const pct = Math.min((hp / 200) * 100, 100);
+            hpBar.style.width = pct + '%';
+
+            hpVal.className = '';
+            hpBar.className = '';
+
+            if (hp > 100) {
+                hpVal.classList.add('overheal');
+                hpBar.classList.add('overheal');
+            } else if (hp < 20) {
+                hpVal.classList.add('critical');
+                hpBar.classList.add('critical');
+            } else if (hp < 50) {
+                hpVal.classList.add('low');
+                hpBar.classList.add('low');
+            }
+        }
+
+        // ── WEAPON ──
+        function updateWeapon(type) {
+            S.weapon = type;
+            showWeaponImg(type);
+
+            if (type === 'none') {
+                weapName.textContent = 'UNARMED';
+                ammoDisp.innerHTML = '--';
+                ammoDisp.className = '';
+            } else {
+                weapName.textContent = type.toUpperCase();
+                updateAmmoDisplay();
+            }
+        }
+
+        // ── AMMO ──
+        function updateAmmo(clip, reserve) {
+            S.clip = clip;
+            S.reserve = reserve;
+            updateAmmoDisplay();
+        }
+
+        function updateAmmoDisplay() {
+            if (S.weapon === 'none') return;
+            ammoDisp.innerHTML = S.clip + '<span class="ammo-reserve"> / ' + S.reserve + '</span>';
+            ammoDisp.className = '';
+            if (S.clip === 0 && S.reserve === 0) ammoDisp.classList.add('empty');
+            else if (S.clip <= 2) ammoDisp.classList.add('low');
+        }
+
+        // ── SCORE ──
+        function updateScore() {
+            killsNum.textContent = S.kills;
+            deathsNum.textContent = S.deaths;
+        }
+
+        // ── KILL STREAK ──
+        const STREAK_NAMES = {
+            3: 'TRIPLE KILL',
+            5: 'KILLING SPREE',
+            7: 'RAMPAGE',
+            10: 'UNSTOPPABLE',
+            15: 'GODLIKE'
+        };
+
+        function updateStreak() {
+            const keys = Object.keys(STREAK_NAMES).map(Number).sort((a,b) => b - a);
+            let label = '';
+            for (const k of keys) {
+                if (S.streak >= k) { label = STREAK_NAMES[k]; break; }
+            }
+            if (label) {
+                streakBadge.textContent = label;
+                streakBadge.classList.add('active');
+            } else {
+                streakBadge.classList.remove('active');
+            }
+        }
+
+        // ── TIMER ──
+        function updateTimer(sec) {
+            S.timer = Math.max(0, sec);
+            const m = Math.floor(S.timer / 60);
+            const s = S.timer % 60;
+            timerDisp.textContent = m + ':' + String(s).padStart(2, '0');
+
+            if (S.timer < 30 && S.timer > 0) timerDisp.classList.add('warning');
+            else timerDisp.classList.remove('warning');
+
+            if (S.timer === 0) timerDisp.textContent = '0:00';
+        }
+
+        // ── KILL FEED ──
+        function addKillFeed() {
+            const msg = document.createElement('div');
+            msg.className = 'kf-msg';
+            msg.textContent = 'KILL CONFIRMED';
+            killfeed.appendChild(msg);
+            setTimeout(() => { if (msg.parentNode) msg.remove(); }, 2500);
+            while (killfeed.children.length > 3) killfeed.removeChild(killfeed.firstChild);
+        }
+
+        // ── BOOST ──
+        function updateBoost(on) {
+            S.boosted = !!on;
+            if (on) boostInd.classList.add('active');
+            else boostInd.classList.remove('active');
+        }
+
+        // ── PICKUP FLASH ──
+        function showPickup(text, color) {
+            pickupFlash.textContent = text;
+            pickupFlash.style.color = color || '#39FF14';
+            pickupFlash.classList.remove('active');
+            void pickupFlash.offsetWidth; // reflow
+            pickupFlash.classList.add('active');
+            setTimeout(() => pickupFlash.classList.remove('active'), 1800);
+        }
+
+        // ── GAME STATE ──
+        function showGameState(text, sub, duration) {
+            overlayText.textContent = text;
+            overlaySub.textContent = sub || '';
+            gameOverlay.classList.add('active');
+            setTimeout(() => gameOverlay.classList.remove('active'), duration || 3000);
+        }
+
+        // ── HIT MARKER ──
+        function flashHitMarker() {
+            crosshair.classList.add('hit');
+            setTimeout(() => crosshair.classList.remove('hit'), 200);
+        }
+
+        // ── MESSAGE HANDLER ──
+        function handleMsg(msg) {
+            if (typeof msg !== 'string') return;
+
+            // ammo_clip_reserve  (e.g. "ammo_12_36")
+            if (msg.startsWith('ammo_')) {
+                const parts = msg.split('_');
+                if (parts.length === 3) {
+                    updateAmmo(parseInt(parts[1]) || 0, parseInt(parts[2]) || 0);
+                }
+                return;
+            }
+
+            // weapon_type  (e.g. "weapon_pistol", "weapon_rifle", "weapon_shotgun", "weapon_none")
+            if (msg.startsWith('weapon_')) {
+                const type = msg.substring(7);
+                updateWeapon(type);
+                return;
+            }
+
+            // pickup_text_color  (e.g. "pickup_HEALTH +50_#39FF14")
+            if (msg.startsWith('pickup_')) {
+                const rest = msg.substring(7);
+                const idx = rest.lastIndexOf('_');
+                if (idx > 0) {
+                    showPickup(rest.substring(0, idx), rest.substring(idx + 1));
+                } else {
+                    showPickup(rest, '#39FF14');
+                }
+                return;
+            }
+
+            // hit_1 (hit marker flash)
+            if (msg === 'hit_1') {
+                flashHitMarker();
+                return;
+            }
+
+            // Standard underscore protocol
+            const sep = msg.indexOf('_');
+            if (sep === -1) return;
+            const type = msg.substring(0, sep);
+            const val = parseFloat(msg.substring(sep + 1));
+
+            switch (type) {
+                case 'health':
+                    updateHealth(val);
+                    break;
+                case 'kill':
+                    S.kills = val;
+                    S.streak++;
+                    updateScore();
+                    updateStreak();
+                    if (val > 0) addKillFeed();
+                    break;
+                case 'death':
+                    S.deaths = val;
+                    S.streak = 0;
+                    updateScore();
+                    updateStreak();
+                    break;
+                case 'timer':
+                    updateTimer(val);
+                    break;
+                case 'boost':
+                    updateBoost(val);
+                    break;
+                case 'start':
+                    if (val === 1) showGameState('MATCH START', 'FIRST TO 20 KILLS', 2500);
+                    break;
+                case 'gameover':
+                    if (val === 1) showGameState('MATCH OVER', S.kills + ' KILLS / ' + S.deaths + ' DEATHS', 5000);
+                    break;
+                case 'dead':
+                    if (val === 1) showGameState('ELIMINATED', 'RESPAWNING...', 2000);
+                    break;
+                case 'respawn':
+                    if (val === 1) {
+                        updateHealth(100);
+                        S.streak = 0;
+                        updateStreak();
+                    }
+                    break;
+            }
+        }
+
+        // ── PORTALS LISTENER ──
+        window.addEventListener('message', function(e) {
+            const d = e.data;
+            if (typeof d === 'string') handleMsg(d);
+            else if (d && d.type === 'portals') handleMsg(d.data);
+        });
+
+        // ── INIT ──
+        updateHealth(100);
+        updateWeapon('none');
+        updateScore();
+        updateTimer(300);
+        updateBoost(0);
+
+        // Client-side timer countdown (visual only, server is truth)
+        setInterval(() => {
+            if (S.matchActive && S.timer > 0) updateTimer(S.timer - 1);
+        }, 1000);
+    </script>
 </body>
 </html>
