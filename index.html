@@ -280,6 +280,46 @@
         .hud-elements.hud-hidden { opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
         .hud-elements { transition: opacity 0.25s ease; }
 
+        /* ═══ Bottom-Left: MINIMAP ═══ */
+        .minimap {
+            position: absolute;
+            bottom: 200px; left: 30px;
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #3efcff;
+            box-shadow: 0 0 12px #3efcff, inset 0 0 18px rgba(0,255,255,0.15);
+            background: rgba(20, 25, 30, 0.7);
+        }
+        .minimap canvas {
+            width: 100%; height: 100%;
+            display: block;
+        }
+        .minimap-arrow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -60%);
+            width: 0; height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 14px solid #3efcff;
+            filter: drop-shadow(0 0 6px #3efcff);
+            z-index: 2;
+            pointer-events: none;
+        }
+        .minimap-label {
+            position: absolute;
+            bottom: 4px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px; font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(62,252,255,0.6);
+            text-shadow: 0 0 4px rgba(62,252,255,0.3);
+            z-index: 3;
+            pointer-events: none;
+        }
+
         /* ═══ Center: CROSSHAIR ═══ */
         .crosshair {
             position: absolute;
@@ -454,6 +494,8 @@
             .timer-display { font-size: 28px; }
             .score-value { font-size: 24px; }
             .ammo-display { font-size: 22px; }
+            .minimap { width: 120px; height: 120px; bottom: 170px; }
+            .minimap canvas { width: 120px; height: 120px; }
         }
     </style>
 </head>
@@ -494,6 +536,13 @@
 
             <!-- Boost -->
             <div class="boost-indicator" id="boostIndicator">SPEED BOOST</div>
+
+            <!-- Bottom-Left: MINIMAP (above vitals) -->
+            <div class="minimap" id="minimapContainer">
+                <canvas id="minimapCanvas" width="160" height="160"></canvas>
+                <div class="minimap-arrow"></div>
+                <div class="minimap-label">MAP</div>
+            </div>
 
             <!-- Bottom-Right: WEAPON -->
             <div class="weapon-panel panel">
@@ -732,9 +781,151 @@
             else boostInd.classList.remove('active');
         }
 
+        // ═══════════════════════════════════════════════════════
+        // ══ MINIMAP (canvas-based, receives heartbeat data) ══
+        // ═══════════════════════════════════════════════════════
+        const MM = {
+            mapUrl: 'https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-02-26_30af5521c286f605087bc350e85c6634.png',
+            xMin: -490.99, xMax: 180.46,
+            zMin: -364.42, zMax: 92.07,
+            imgW: 607, imgH: 608,
+            size: 160, radius: 80,
+            zoom: 3.0
+        };
+
+        const mmCanvas = $('minimapCanvas');
+        const mmCtx = mmCanvas.getContext('2d');
+        const mmImg = new Image();
+        mmImg.crossOrigin = 'anonymous';
+        mmImg.src = MM.mapUrl;
+
+        let mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
+        let mmAllPos = {}, mmAllRot = {};
+        let mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
+
+        function mmW2I(wx, wz) {
+            return {
+                x: (wx - MM.xMin) / (MM.xMax - MM.xMin) * MM.imgW,
+                y: (MM.zMax - wz) / (MM.zMax - MM.zMin) * MM.imgH
+            };
+        }
+
+        function mmLerp(a, b, t) { return a + (b - a) * t; }
+        function mmLerpA(a, b, t) {
+            let d = b - a;
+            while (d > 180) d -= 360;
+            while (d < -180) d += 360;
+            return a + d * t;
+        }
+
+        function mmParsePos(msg) {
+            var m = msg.match(/"([^"]+)"pos:\{(.+)\}/);
+            if (!m) return false;
+            if (!mmMyName) mmMyName = m[1];
+            var re = /"([^"]+)"\s*=\s*"\(([^)]+)\)"/g;
+            var mt;
+            while ((mt = re.exec(m[2])) !== null) {
+                var c = mt[2].split(',');
+                var wx = parseFloat(c[0]) || 0;
+                var wz = parseFloat(c[2]) || 0;
+                mmAllPos[mt[1]] = { x: wx, z: wz };
+                if (mt[1] === mmMyName) { mmPX = wx; mmPZ = wz; }
+            }
+            return true;
+        }
+
+        function mmParseRot(msg) {
+            var m = msg.match(/"([^"]+)"rot:\{(.+)\}/);
+            if (!m) return false;
+            var re = /"([^"]+)"\s*=\s*"([^"]+)"/g;
+            var mt;
+            while ((mt = re.exec(m[2])) !== null) {
+                mmAllRot[mt[1]] = parseFloat(mt[2]) || 0;
+                if (mt[1] === mmMyName) mmRot = mmAllRot[mt[1]];
+            }
+            return true;
+        }
+
+        var mmLast = 0;
+        function mmDraw(now) {
+            requestAnimationFrame(mmDraw);
+            if (!mmReady || !mmImg.complete) return;
+
+            var dt = mmLast ? (now - mmLast) / 1000 : 0.016;
+            mmLast = now;
+            var t = 1 - Math.pow(0.85, dt * 60);
+
+            mmDX = mmLerp(mmDX, mmPX, t);
+            mmDZ = mmLerp(mmDZ, mmPZ, t);
+            mmDR = mmLerpA(mmDR, mmRot, t);
+            mmDR = ((mmDR % 360) + 360) % 360;
+
+            var r = MM.radius;
+            var si = mmW2I(mmDX, mmDZ);
+            var a = -mmDR * Math.PI / 180;
+            var z = MM.zoom;
+
+            mmCtx.clearRect(0, 0, MM.size, MM.size);
+            mmCtx.save();
+
+            // Clip to circle
+            mmCtx.beginPath();
+            mmCtx.arc(r, r, r, 0, Math.PI * 2);
+            mmCtx.clip();
+
+            // Dark background
+            mmCtx.fillStyle = 'rgba(20, 25, 30, 0.85)';
+            mmCtx.fillRect(0, 0, MM.size, MM.size);
+
+            // Transform: center, rotate by heading, zoom, draw map
+            mmCtx.translate(r, r);
+            mmCtx.rotate(a);
+            mmCtx.scale(z, z);
+            mmCtx.drawImage(mmImg, -si.x, -si.y);
+
+            // Other players as red dots
+            for (var n in mmAllPos) {
+                if (n === mmMyName) continue;
+                var oImg = mmW2I(mmAllPos[n].x, mmAllPos[n].z);
+                var dx = oImg.x - si.x;
+                var dy = oImg.y - si.y;
+                var dist = Math.sqrt(dx * dx + dy * dy) * z;
+                if (dist < r - 4) {
+                    mmCtx.fillStyle = '#ff6b6b';
+                    mmCtx.beginPath();
+                    mmCtx.arc(dx, dy, 2.5 / z, 0, Math.PI * 2);
+                    mmCtx.fill();
+                }
+            }
+
+            mmCtx.restore();
+
+            // North indicator (small N at top of circle)
+            mmCtx.save();
+            mmCtx.fillStyle = 'rgba(62,252,255,0.5)';
+            mmCtx.font = '9px Orbitron';
+            mmCtx.textAlign = 'center';
+            mmCtx.fillText('N', r + Math.sin(-a) * (r - 10), r - Math.cos(-a) * (r - 10) + 3);
+            mmCtx.restore();
+        }
+        requestAnimationFrame(mmDraw);
+
         // ══ MESSAGE HANDLER ══
         function handleMsg(msg) {
             if (typeof msg !== 'string') return;
+
+            // Minimap position/rotation data from heartbeat
+            if (msg.indexOf('pos:{') !== -1) {
+                if (mmParsePos(msg) && !mmReady) {
+                    mmReady = true;
+                    mmDX = mmPX; mmDZ = mmPZ; mmDR = mmRot;
+                }
+                return;
+            }
+            if (msg.indexOf('rot:{') !== -1) {
+                mmParseRot(msg);
+                return;
+            }
 
             // Multi-part messages (ammo, pickup)
             if (msg.startsWith('ammo_')) {
@@ -794,6 +985,7 @@
         // ══ PORTALS SDK ══
         if (typeof PortalsSdk !== 'undefined') {
             PortalsSdk.setMessageListener(function(message) { handleMsg(message); });
+            PortalsSdk.focusGameKeyboard();
         }
 
         // Fallback for browser testing
@@ -803,7 +995,7 @@
             else if (d && d.type === 'portals') handleMsg(d.data);
         });
 
-        // ══ HUD TOGGLE (J key — or toggle_1 message from Portals) ══
+        // ══ HUD TOGGLE (toggle_1 message from Portals trigger) ══
         let hudVisible = true;
         function toggleHud() {
             hudVisible = !hudVisible;
@@ -812,9 +1004,6 @@
             el.classList.toggle('hud-hidden', !hudVisible);
             btn.classList.toggle('hidden', !hudVisible);
         }
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'j' || e.key === 'J') toggleHud();
-        });
 
         // ══ INIT ══
         updateHealth(100);
