@@ -319,6 +319,17 @@
             z-index: 3;
             pointer-events: none;
         }
+        .minimap-debug {
+            position: absolute;
+            top: -18px; left: 0;
+            font-size: 9px; font-weight: 400;
+            font-family: monospace;
+            color: #3efcff;
+            text-shadow: 0 0 4px rgba(0,0,0,0.8);
+            z-index: 3;
+            pointer-events: none;
+            white-space: nowrap;
+        }
 
         /* ═══ Center: CROSSHAIR ═══ */
         .crosshair {
@@ -542,6 +553,7 @@
                 <canvas id="minimapCanvas" width="160" height="160"></canvas>
                 <div class="minimap-arrow"></div>
                 <div class="minimap-label">MAP</div>
+                <div class="minimap-debug" id="mmDebug">waiting for data...</div>
             </div>
 
             <!-- Bottom-Right: WEAPON -->
@@ -899,6 +911,9 @@
             }
 
             mmCtx.restore();
+
+            // Debug coordinates
+            $('mmDebug').textContent = 'X:' + mmDX.toFixed(0) + ' Z:' + mmDZ.toFixed(0) + ' R:' + mmDR.toFixed(0);
 
             // North indicator (small N at top of circle)
             mmCtx.save();
