@@ -319,17 +319,7 @@
             z-index: 3;
             pointer-events: none;
         }
-        .minimap-debug {
-            position: absolute;
-            top: -18px; left: 0;
-            font-size: 9px; font-weight: 400;
-            font-family: monospace;
-            color: #3efcff;
-            text-shadow: 0 0 4px rgba(0,0,0,0.8);
-            z-index: 3;
-            pointer-events: none;
-            white-space: nowrap;
-        }
+        .minimap-n { display: none; /* cardinal labels drawn on canvas */ }
 
         /* ═══ Center: CROSSHAIR ═══ */
         .crosshair {
@@ -506,7 +496,6 @@
             .score-value { font-size: 24px; }
             .ammo-display { font-size: 22px; }
             .minimap { width: 120px; height: 120px; bottom: 170px; }
-            .minimap canvas { width: 120px; height: 120px; }
         }
     </style>
 </head>
@@ -552,8 +541,7 @@
             <div class="minimap" id="minimapContainer">
                 <canvas id="minimapCanvas" width="160" height="160"></canvas>
                 <div class="minimap-arrow"></div>
-                <div class="minimap-label">MAP</div>
-                <div class="minimap-debug" id="mmDebug">waiting for data...</div>
+                <div class="minimap-label">RADAR</div>
             </div>
 
             <!-- Bottom-Right: WEAPON -->
@@ -794,37 +782,25 @@
         }
 
         // ═══════════════════════════════════════════════════════
-        // ══ MINIMAP (canvas-based, receives heartbeat data) ══
+        // ══ MINIMAP (radar-style, no background image)       ══
+        // ══ Player always at center, others as relative dots ══
         // ═══════════════════════════════════════════════════════
         const MM = {
-            mapUrl: 'https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-02-26_30af5521c286f605087bc350e85c6634.png',
-            xMin: -490.99, xMax: 180.46,
-            zMin: -364.42, zMax: 92.07,
-            imgW: 607, imgH: 608,
-            size: 160, radius: 80,
-            zoom: 3.0
+            size: 160,
+            radius: 80,
+            range: 120  // world units from center to edge
         };
 
         const mmCanvas = $('minimapCanvas');
         const mmCtx = mmCanvas.getContext('2d');
-        const mmImg = new Image();
-        mmImg.crossOrigin = 'anonymous';
-        mmImg.src = MM.mapUrl;
 
         let mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
         let mmAllPos = {}, mmAllRot = {};
         let mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
 
-        function mmW2I(wx, wz) {
-            return {
-                x: (wx - MM.xMin) / (MM.xMax - MM.xMin) * MM.imgW,
-                y: (MM.zMax - wz) / (MM.zMax - MM.zMin) * MM.imgH
-            };
-        }
-
         function mmLerp(a, b, t) { return a + (b - a) * t; }
         function mmLerpA(a, b, t) {
-            let d = b - a;
+            var d = b - a;
             while (d > 180) d -= 360;
             while (d < -180) d += 360;
             return a + d * t;
@@ -861,7 +837,7 @@
         var mmLast = 0;
         function mmDraw(now) {
             requestAnimationFrame(mmDraw);
-            if (!mmReady || !mmImg.complete) return;
+            if (!mmReady) return;
 
             var dt = mmLast ? (now - mmLast) / 1000 : 0.016;
             mmLast = now;
@@ -873,9 +849,8 @@
             mmDR = ((mmDR % 360) + 360) % 360;
 
             var r = MM.radius;
-            var si = mmW2I(mmDX, mmDZ);
-            var a = -mmDR * Math.PI / 180;
-            var z = MM.zoom;
+            var a = mmDR * Math.PI / 180; // player heading in radians
+            var scale = r / MM.range;     // pixels per world unit
 
             mmCtx.clearRect(0, 0, MM.size, MM.size);
             mmCtx.save();
@@ -886,41 +861,99 @@
             mmCtx.clip();
 
             // Dark background
-            mmCtx.fillStyle = 'rgba(20, 25, 30, 0.85)';
+            mmCtx.fillStyle = 'rgba(12, 16, 20, 0.9)';
             mmCtx.fillRect(0, 0, MM.size, MM.size);
 
-            // Transform: center, rotate by heading, zoom, draw map
-            mmCtx.translate(r, r);
-            mmCtx.rotate(a);
-            mmCtx.scale(z, z);
-            mmCtx.drawImage(mmImg, -si.x, -si.y);
-
-            // Other players as red dots
-            for (var n in mmAllPos) {
-                if (n === mmMyName) continue;
-                var oImg = mmW2I(mmAllPos[n].x, mmAllPos[n].z);
-                var dx = oImg.x - si.x;
-                var dy = oImg.y - si.y;
-                var dist = Math.sqrt(dx * dx + dy * dy) * z;
-                if (dist < r - 4) {
-                    mmCtx.fillStyle = '#ff6b6b';
-                    mmCtx.beginPath();
-                    mmCtx.arc(dx, dy, 2.5 / z, 0, Math.PI * 2);
-                    mmCtx.fill();
-                }
+            // ── Grid rings (distance indicators) ──
+            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.12)';
+            mmCtx.lineWidth = 1;
+            for (var ring = 1; ring <= 3; ring++) {
+                var rr = (ring / 3) * r;
+                mmCtx.beginPath();
+                mmCtx.arc(r, r, rr, 0, Math.PI * 2);
+                mmCtx.stroke();
             }
 
+            // ── Cross lines (N-S, E-W axes) ──
+            mmCtx.save();
+            mmCtx.translate(r, r);
+            mmCtx.rotate(-a); // rotate grid with player heading so N stays up relative to player
+            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.08)';
+            mmCtx.beginPath();
+            mmCtx.moveTo(0, -r); mmCtx.lineTo(0, r); // N-S line
+            mmCtx.moveTo(-r, 0); mmCtx.lineTo(r, 0); // E-W line
+            mmCtx.stroke();
+
+            // ── Cardinal direction labels ──
+            mmCtx.fillStyle = 'rgba(62, 252, 255, 0.5)';
+            mmCtx.font = '700 9px Orbitron';
+            mmCtx.textAlign = 'center';
+            mmCtx.textBaseline = 'middle';
+            var cardR = r - 10;
+            // N at top
+            mmCtx.fillStyle = '#ff6b6b'; // N is red to stand out
+            mmCtx.fillText('N', 0, -cardR);
+            mmCtx.fillStyle = 'rgba(62, 252, 255, 0.45)';
+            mmCtx.fillText('S', 0, cardR);
+            mmCtx.fillText('E', cardR, 0);
+            mmCtx.fillText('W', -cardR, 0);
             mmCtx.restore();
 
-            // Debug coordinates
-            $('mmDebug').textContent = 'X:' + mmDX.toFixed(0) + ' Z:' + mmDZ.toFixed(0) + ' R:' + mmDR.toFixed(0);
-
-            // North indicator (small N at top of circle)
+            // ── Other players as red dots ──
             mmCtx.save();
-            mmCtx.fillStyle = 'rgba(62,252,255,0.5)';
-            mmCtx.font = '9px Orbitron';
-            mmCtx.textAlign = 'center';
-            mmCtx.fillText('N', r + Math.sin(-a) * (r - 10), r - Math.cos(-a) * (r - 10) + 3);
+            mmCtx.translate(r, r);
+            for (var name in mmAllPos) {
+                if (name === mmMyName) continue;
+                // World-space delta from me to other player
+                var wx = mmAllPos[name].x - mmDX;
+                var wz = mmAllPos[name].z - mmDZ;
+
+                // Rotate by player heading so forward = up on radar
+                // Portals: X = right, Z = forward. Heading 0 = +Z
+                var cosA = Math.cos(-a);
+                var sinA = Math.sin(-a);
+                var rx = wx * cosA - wz * sinA;
+                var ry = -(wx * sinA + wz * cosA); // negate Y so forward = up
+
+                // Scale to pixel space
+                var px = rx * scale;
+                var py = ry * scale;
+
+                // Distance check (skip if outside radar circle)
+                var dist = Math.sqrt(px * px + py * py);
+                if (dist > r - 6) continue;
+
+                // Draw red dot with glow
+                mmCtx.fillStyle = '#ff6b6b';
+                mmCtx.shadowColor = '#ff6b6b';
+                mmCtx.shadowBlur = 6;
+                mmCtx.beginPath();
+                mmCtx.arc(px, py, 3.5, 0, Math.PI * 2);
+                mmCtx.fill();
+
+                // Draw rotation indicator (small line showing their facing direction)
+                if (mmAllRot[name] !== undefined) {
+                    var eRad = mmAllRot[name] * Math.PI / 180;
+                    var eA = eRad - a; // relative to our heading
+                    mmCtx.strokeStyle = '#ff6b6b';
+                    mmCtx.lineWidth = 1.5;
+                    mmCtx.shadowBlur = 0;
+                    mmCtx.beginPath();
+                    mmCtx.moveTo(px, py);
+                    mmCtx.lineTo(px + Math.sin(eA) * 6, py - Math.cos(eA) * 6);
+                    mmCtx.stroke();
+                }
+            }
+            mmCtx.shadowBlur = 0;
+            mmCtx.restore();
+
+            // ── Outer ring border glow ──
+            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.25)';
+            mmCtx.lineWidth = 1.5;
+            mmCtx.beginPath();
+            mmCtx.arc(r, r, r - 1, 0, Math.PI * 2);
+            mmCtx.stroke();
+
             mmCtx.restore();
         }
         requestAnimationFrame(mmDraw);
