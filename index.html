@@ -6,8 +6,9 @@
     <title>DinoDawgs Battle HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
+    <audio id="bgDrums" loop preload="auto" src="../assets/tribal_drums.mp3"></audio>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -16,7 +17,7 @@
             overflow: hidden;
             background: transparent !important;
             background-color: transparent !important;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Rubik Spray Paint', cursive;
             color: #3efcff;
             user-select: none;
             -webkit-user-select: none;
@@ -542,6 +543,7 @@
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
+            pointer-events: none;
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.75) 60%, rgba(0,5,15,0.97) 100%);
         }
 
@@ -682,10 +684,10 @@
         }
 
         .briefing-title {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bungee', cursive;
             font-size: 72px;
-            font-weight: 900;
-            letter-spacing: 16px;
+            font-weight: 400;
+            letter-spacing: 10px;
             text-transform: uppercase;
             color: #7ecfff;
             text-shadow:
@@ -693,10 +695,18 @@
                 0 0 80px rgba(74,163,255,0.4),
                 0 0 120px rgba(40,100,200,0.3),
                 0 2px 4px rgba(0,0,0,0.9);
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            margin-bottom: 8px;
+        }
+        .briefing-title.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
 
         .briefing-subtitle {
-            font-family: 'Cinzel', serif;
+            font-family: 'Permanent Marker', cursive;
             font-size: 15px;
             font-weight: 700;
             letter-spacing: 8px;
@@ -710,7 +720,7 @@
         .briefing-subtitle.visible { opacity: 1; }
 
         .briefing-lore {
-            font-family: 'Cinzel', serif;
+            font-family: 'Permanent Marker', cursive;
             font-size: 21px;
             font-weight: 400;
             line-height: 1.9;
@@ -768,70 +778,31 @@
 
         .briefing-missions {
             display: flex;
-            gap: 40px;
+            gap: 24px;
             opacity: 0;
             transform: translateY(25px);
             transition: opacity 0.8s ease, transform 0.8s ease;
             margin-top: 15px;
         }
 
-        /* Title row — logos flanking DINODAWGS */
-        .briefing-title-row {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            opacity: 0;
-            transform: translateY(-30px) scale(0.95);
-            transition: opacity 1.5s ease, transform 1.5s ease;
-            margin-bottom: 8px;
-        }
-        .briefing-title-row.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+        /* Neon logo — between mission cards */
         .neon-logo {
-            width: 70px; height: 70px;
+            width: 90px; height: 90px;
             flex-shrink: 0;
             pointer-events: none;
+            align-self: center;
         }
         .neon-logo img {
             width: 100%; height: 100%;
             object-fit: contain;
-            mix-blend-mode: screen;
-            filter: drop-shadow(0 0 10px rgba(62,252,200,0.5));
+            filter: drop-shadow(0 0 12px rgba(62,252,200,0.6));
             animation: logoPulse 4s ease-in-out infinite;
         }
-        .neon-logo.flip img { transform: scaleX(-1); }
         @keyframes logoPulse {
             0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); }
             50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); }
         }
 
-        /* Koldhart — center reveal on last line */
-        .koldhart-ghost {
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            width: 350px; height: 350px;
-            z-index: 2;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 2.5s ease;
-        }
-        .koldhart-ghost.visible { opacity: 1; }
-        .koldhart-ghost img {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            opacity: 0.2;
-            filter: saturate(0.3) brightness(0.6) contrast(1.3);
-            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.2) 50%, transparent 75%);
-            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.2) 50%, transparent 75%);
-            animation: koldhartBreathe 6s ease-in-out infinite;
-        }
-        @keyframes koldhartBreathe {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(1.03); }
-        }
         .briefing-missions.visible {
             opacity: 1;
             transform: translateY(0);
@@ -890,10 +861,10 @@
         }
 
         .mission-mode {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: 3px;
+            font-family: 'Bungee', cursive;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 12px;
         }
@@ -907,7 +878,7 @@
         }
 
         .mission-desc {
-            font-family: 'Cinzel', serif;
+            font-family: 'Permanent Marker', cursive;
             font-size: 14px;
             color: rgba(200, 210, 220, 0.7);
             line-height: 1.5;
@@ -925,7 +896,7 @@
         .briefing-skip {
             position: absolute;
             bottom: 24px; right: 30px;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Rubik Spray Paint', cursive;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 3px;
@@ -996,9 +967,7 @@
             .briefing-lore { font-size: 16px; max-width: 90%; }
             .briefing-missions { flex-direction: column; gap: 16px; }
             .mission-card { width: 240px; padding: 16px 14px; }
-            .neon-logo { width: 45px; height: 45px; }
-            .briefing-title-row { gap: 12px; }
-            .koldhart-ghost { width: 200px; height: 200px; }
+            .neon-logo { width: 50px; height: 50px; }
         }
     </style>
 </head>
@@ -1016,15 +985,8 @@
             <div class="briefing-fog"></div>
             <div class="snowflakes" id="snowflakes"></div>
             <div class="lightning-flash" id="lightningFlash"></div>
-            <div class="koldhart-ghost" id="koldhartGhost">
-                <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_3890f04a024c327222fbaeed818687b6.png" alt="Koldhart">
-            </div>
             <div class="briefing-content">
-                <div class="briefing-title-row" id="briefingTitleRow">
-                    <div class="neon-logo"><img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d82ec79a8b8c7c433603aa869f3ff4ba.png" alt="DinoDawgs"></div>
-                    <div class="briefing-title" id="briefingTitle">DINODAWGS</div>
-                    <div class="neon-logo flip"><img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d82ec79a8b8c7c433603aa869f3ff4ba.png" alt="DinoDawgs"></div>
-                </div>
+                <div class="briefing-title" id="briefingTitle">DINODAWGS</div>
                 <div class="briefing-subtitle" id="briefingSubtitle">War Council Briefing</div>
                 <div class="briefing-lore" id="briefingLore"></div>
                 <div class="briefing-divider" id="briefingDivider"></div>
@@ -1033,6 +995,9 @@
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
                         <div class="mission-desc">Free-for-all. 8 players. First to 20 kills.</div>
+                    </div>
+                    <div class="neon-logo" id="neonLogo">
+                        <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
                     </div>
                     <div class="mission-card iceborne" onclick="selectMission('iceborne')">
                         <div class="mission-icon">&#x2744;</div>
@@ -1429,7 +1394,7 @@
 
             // ── Cardinal direction labels ──
             mmCtx.fillStyle = 'rgba(62, 252, 255, 0.5)';
-            mmCtx.font = '700 9px Orbitron';
+            mmCtx.font = '9px Rubik Spray Paint';
             mmCtx.textAlign = 'center';
             mmCtx.textBaseline = 'middle';
             var cardR = r - 10;
@@ -1645,12 +1610,11 @@
             void lightningFlash.offsetWidth;
             lightningFlash.classList.add(isDouble ? 'double' : 'strike');
 
-            // Screen shake
+            // Screen shake + thunder sound
             briefingScreen.classList.remove('shake');
             void briefingScreen.offsetWidth;
             briefingScreen.classList.add('shake');
             setTimeout(() => briefingScreen.classList.remove('shake'), 200);
-
             // Schedule next
             const next = 3000 + Math.random() * 8000;
             setTimeout(triggerLightning, next);
@@ -1708,10 +1672,6 @@
                     briefingScreen.classList.add('shake');
                     setTimeout(() => briefingScreen.classList.remove('shake'), 200);
                 }
-                // Koldhart ghost fades in on the LAST line (the rhyme about him)
-                if (twLineIdx === 4) {
-                    $('koldhartGhost').classList.add('visible');
-                }
             }
 
             // Type one character
@@ -1733,9 +1693,40 @@
             }
         }
 
+        // ══ BRIEFING AUDIO ══
+        const bgDrums = $('bgDrums');
+        bgDrums.volume = 0.5;
+
+        function playBriefingAudio() {
+            bgDrums.play().catch(() => {});
+        }
+
+        function fadeOutAudio() {
+            let vol = bgDrums.volume;
+            const fade = setInterval(() => {
+                vol -= 0.05;
+                if (vol <= 0) {
+                    bgDrums.volume = 0;
+                    bgDrums.pause();
+                    clearInterval(fade);
+                } else {
+                    bgDrums.volume = vol;
+                }
+            }, 80);
+        }
+
+        // Unlock audio on first click (browser autoplay policy)
+        function unlockAudio() {
+            playBriefingAudio();
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('touchstart', unlockAudio);
+        }
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
         function startBriefing() {
-            // Fade in title row (logos + DINODAWGS together)
-            setTimeout(() => $('briefingTitleRow').classList.add('visible'), 300);
+            playBriefingAudio();
+            setTimeout(() => briefingTitle.classList.add('visible'), 300);
             setTimeout(() => briefingSub.classList.add('visible'), 600);
             // Start typewriter after title settles
             setTimeout(typeNextChar, 2200);
@@ -1752,9 +1743,8 @@
                 span.textContent = line.text;
                 briefingLore.appendChild(span);
             });
-            $('briefingTitleRow').classList.add('visible');
+            briefingTitle.classList.add('visible');
             briefingSub.classList.add('visible');
-            $('koldhartGhost').classList.add('visible');
             $('briefingDivider').classList.add('visible');
             briefingMissions.classList.add('visible');
         }
@@ -1763,6 +1753,7 @@
             if (!briefingActive) return;
             briefingActive = false;
             lightningEnabled = false;
+            fadeOutAudio();
 
             // Fade out briefing first (before any SDK calls that might throw)
             briefingScreen.classList.add('fade-out');
@@ -1776,9 +1767,7 @@
             // Send mission choice to Portals (non-blocking)
             try {
                 const msg = mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena';
-                if (typeof PortalsSdk !== 'undefined') {
-                    window.parent.postMessage(msg, '*');
-                }
+                window.parent.postMessage(msg, '*');
             } catch(e) {}
         }
 
