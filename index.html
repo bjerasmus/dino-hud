@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
-    <audio id="bgDrums" loop preload="auto" src="../assets/tribal_drums.mp3"></audio>
+    <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1694,16 +1694,17 @@
         }
 
         // ══ BRIEFING AUDIO ══
-        const bgDrums = $('bgDrums');
-        bgDrums.volume = 0.5;
+        const bgDrums = document.getElementById('bgDrums');
+        if (bgDrums) bgDrums.volume = 0.5;
 
         function playBriefingAudio() {
-            bgDrums.play().catch(() => {});
+            if (bgDrums) bgDrums.play().catch(function(){});
         }
 
         function fadeOutAudio() {
-            let vol = bgDrums.volume;
-            const fade = setInterval(() => {
+            if (!bgDrums) return;
+            var vol = bgDrums.volume;
+            var fade = setInterval(function() {
                 vol -= 0.05;
                 if (vol <= 0) {
                     bgDrums.volume = 0;
@@ -1716,13 +1717,10 @@
         }
 
         // Unlock audio on first click (browser autoplay policy)
-        function unlockAudio() {
+        document.addEventListener('click', function onFirstClick() {
             playBriefingAudio();
-            document.removeEventListener('click', unlockAudio);
-            document.removeEventListener('touchstart', unlockAudio);
-        }
-        document.addEventListener('click', unlockAudio);
-        document.addEventListener('touchstart', unlockAudio);
+            document.removeEventListener('click', onFirstClick);
+        });
 
         function startBriefing() {
             playBriefingAudio();
