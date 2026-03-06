@@ -6,7 +6,7 @@
     <title>DinoDawgs Battle HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -494,6 +494,493 @@
             100% { opacity: 0; }
         }
 
+        /* ═══ BRIEFING SCREEN ═══ */
+        .briefing-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2000;
+            pointer-events: auto;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+            background: #000;
+        }
+        .briefing-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .briefing-screen.hidden { display: none; }
+
+        /* Screen shake on lightning */
+        .briefing-screen.shake {
+            animation: screenShake 0.15s ease-out;
+        }
+        @keyframes screenShake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-3px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-1px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .briefing-map {
+            position: absolute;
+            top: -2%; left: -2%;
+            width: 104%; height: 104%;
+            background: url('https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_a0a4198ec4ede32f48e38a335c059ced.png') center center / cover no-repeat;
+            filter: saturate(0.35) brightness(0.3) contrast(1.1);
+            animation: briefingBreathe 10s ease-in-out infinite;
+        }
+        @keyframes briefingBreathe {
+            0%, 100% { transform: scale(1) translate(0, 0); }
+            33% { transform: scale(1.04) translate(-0.3%, 0.2%); }
+            66% { transform: scale(1.02) translate(0.2%, -0.3%); }
+        }
+
+        /* Dark vignette — heavier, moodier */
+        .briefing-vignette {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.75) 60%, rgba(0,5,15,0.97) 100%);
+        }
+
+        /* Frost overlay — thick ice creeping from edges */
+        .briefing-frost {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            box-shadow:
+                inset 0 0 80px rgba(74,163,255,0.25),
+                inset 0 0 160px rgba(74,163,255,0.12),
+                inset 0 0 250px rgba(40,100,180,0.08);
+            animation: frostPulse 5s ease-in-out infinite;
+        }
+        @keyframes frostPulse {
+            0%, 100% {
+                box-shadow:
+                    inset 0 0 80px rgba(74,163,255,0.25),
+                    inset 0 0 160px rgba(74,163,255,0.12),
+                    inset 0 0 250px rgba(40,100,180,0.08);
+            }
+            50% {
+                box-shadow:
+                    inset 0 0 120px rgba(74,163,255,0.4),
+                    inset 0 0 200px rgba(74,163,255,0.2),
+                    inset 0 0 300px rgba(40,100,180,0.15);
+            }
+        }
+
+        /* Ice corner frost — frozen edges creeping in */
+        .frost-corner {
+            position: absolute;
+            width: 300px; height: 300px;
+            pointer-events: none;
+            opacity: 0.6;
+            animation: frostCreep 6s ease-in-out infinite alternate;
+        }
+        .frost-corner.tl {
+            top: -20px; left: -20px;
+            background: radial-gradient(ellipse at 0% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%);
+        }
+        .frost-corner.tr {
+            top: -20px; right: -20px;
+            background: radial-gradient(ellipse at 100% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%);
+        }
+        .frost-corner.bl {
+            bottom: -20px; left: -20px;
+            background: radial-gradient(ellipse at 0% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%);
+        }
+        .frost-corner.br {
+            bottom: -20px; right: -20px;
+            background: radial-gradient(ellipse at 100% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%);
+        }
+        @keyframes frostCreep {
+            0% { opacity: 0.4; transform: scale(0.9); }
+            100% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        /* Fog layer — drifting mist */
+        .briefing-fog {
+            position: absolute;
+            top: 0; left: 0;
+            width: 200%; height: 100%;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(74,163,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 30%, rgba(100,180,255,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 60%, rgba(74,163,255,0.04) 0%, transparent 40%);
+            animation: fogDrift 20s linear infinite;
+        }
+        @keyframes fogDrift {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Lightning flash overlay */
+        .lightning-flash {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+        }
+        .lightning-flash.strike {
+            animation: lightningStrike 0.3s ease-out forwards;
+        }
+        .lightning-flash.double {
+            animation: lightningDouble 0.6s ease-out forwards;
+        }
+        @keyframes lightningStrike {
+            0% { opacity: 0; background: radial-gradient(ellipse at 50% 20%, rgba(180,210,255,0.7) 0%, rgba(74,163,255,0.3) 30%, transparent 70%); }
+            8% { opacity: 1; }
+            15% { opacity: 0.2; }
+            20% { opacity: 0.6; }
+            100% { opacity: 0; }
+        }
+        @keyframes lightningDouble {
+            0% { opacity: 0; background: radial-gradient(ellipse at 30% 15%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); }
+            5% { opacity: 1; }
+            10% { opacity: 0.1; }
+            15% { opacity: 0.8; background: radial-gradient(ellipse at 65% 10%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); }
+            22% { opacity: 0.2; }
+            28% { opacity: 0.5; }
+            100% { opacity: 0; }
+        }
+
+        /* Lightning bolt SVG overlay */
+        .lightning-bolt {
+            position: absolute;
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0;
+            filter: blur(1px);
+        }
+        .lightning-bolt.visible {
+            animation: boltFlash 0.4s ease-out forwards;
+        }
+        @keyframes boltFlash {
+            0% { opacity: 0; }
+            5% { opacity: 1; filter: blur(0px) drop-shadow(0 0 15px rgba(180,210,255,0.9)); }
+            15% { opacity: 0.3; }
+            20% { opacity: 0.9; filter: blur(1px) drop-shadow(0 0 25px rgba(120,180,255,0.7)); }
+            40% { opacity: 0.1; }
+            100% { opacity: 0; }
+        }
+
+        .briefing-content {
+            position: relative;
+            z-index: 10;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .briefing-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            letter-spacing: 16px;
+            text-transform: uppercase;
+            color: #7ecfff;
+            text-shadow:
+                0 0 40px rgba(74,163,255,0.7),
+                0 0 80px rgba(74,163,255,0.4),
+                0 0 120px rgba(40,100,200,0.3),
+                0 2px 4px rgba(0,0,0,0.9);
+        }
+
+        .briefing-subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: rgba(150,200,255,0.6);
+            text-shadow: 0 0 12px rgba(74,163,255,0.4);
+            opacity: 0;
+            transition: opacity 1s ease 0.4s;
+            margin-bottom: 45px;
+        }
+        .briefing-subtitle.visible { opacity: 1; }
+
+        .briefing-lore {
+            font-family: 'Cinzel', serif;
+            font-size: 21px;
+            font-weight: 400;
+            line-height: 1.9;
+            color: rgba(200, 215, 230, 0.95);
+            text-shadow: 0 0 12px rgba(74,163,255,0.35), 0 0 30px rgba(74,163,255,0.1), 0 1px 3px rgba(0,0,0,0.9);
+            text-align: center;
+            max-width: 720px;
+            min-height: 200px;
+            margin-bottom: 30px;
+        }
+        .briefing-lore .lore-line {
+            display: block;
+            margin-bottom: 14px;
+        }
+        .briefing-lore .lore-rhyme {
+            color: #7ecfff;
+            font-style: italic;
+            font-size: 24px;
+            text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3), 0 1px 3px rgba(0,0,0,0.9);
+            animation: rhymeGlow 3s ease-in-out infinite;
+        }
+        @keyframes rhymeGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3); }
+            50% { text-shadow: 0 0 30px rgba(126,207,255,0.8), 0 0 60px rgba(74,163,255,0.5), 0 0 80px rgba(74,163,255,0.2); }
+        }
+
+        .briefing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: #7ecfff;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: blink 0.7s step-end infinite;
+            box-shadow: 0 0 8px rgba(126,207,255,0.6);
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Horizontal rule / divider before missions */
+        .briefing-divider {
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(74,163,255,0.4), rgba(150,200,255,0.6), rgba(74,163,255,0.4), transparent);
+            margin: 15px auto 25px;
+            opacity: 0;
+            transition: opacity 0.8s ease, width 0.8s ease;
+        }
+        .briefing-divider.visible {
+            opacity: 1;
+            width: 300px;
+        }
+
+        .briefing-missions {
+            display: flex;
+            gap: 40px;
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            margin-top: 15px;
+        }
+
+        /* Title row — logos flanking DINODAWGS */
+        .briefing-title-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            margin-bottom: 8px;
+        }
+        .briefing-title-row.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .neon-logo {
+            width: 70px; height: 70px;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        .neon-logo img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            mix-blend-mode: screen;
+            filter: drop-shadow(0 0 10px rgba(62,252,200,0.5));
+            animation: logoPulse 4s ease-in-out infinite;
+        }
+        .neon-logo.flip img { transform: scaleX(-1); }
+        @keyframes logoPulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); }
+            50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); }
+        }
+
+        /* Koldhart — center reveal on last line */
+        .koldhart-ghost {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px; height: 350px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 2.5s ease;
+        }
+        .koldhart-ghost.visible { opacity: 1; }
+        .koldhart-ghost img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            opacity: 0.2;
+            filter: saturate(0.3) brightness(0.6) contrast(1.3);
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.2) 50%, transparent 75%);
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.2) 50%, transparent 75%);
+            animation: koldhartBreathe 6s ease-in-out infinite;
+        }
+        @keyframes koldhartBreathe {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.03); }
+        }
+        .briefing-missions.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mission-card {
+            width: 290px;
+            padding: 28px 22px;
+            background: rgba(5, 10, 20, 0.8);
+            border: 2px solid rgba(62,252,255,0.3);
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.35s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Shimmer sweep on hover */
+        .mission-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .mission-card:hover::before { left: 100%; }
+        /* Bottom glow bar */
+        .mission-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 20%;
+            width: 60%; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .mission-card:hover::after { opacity: 1; }
+        .mission-card:hover {
+            border-color: #3efcff;
+            box-shadow: 0 0 25px rgba(62,252,255,0.5), inset 0 0 25px rgba(62,252,255,0.1), 0 8px 30px rgba(0,0,0,0.4);
+            transform: translateY(-6px);
+        }
+        .mission-card:active { transform: translateY(-3px) scale(0.98); }
+
+        .mission-card.iceborne {
+            border-color: rgba(74,163,255,0.3);
+        }
+        .mission-card.iceborne::after {
+            background: linear-gradient(90deg, transparent, rgba(74,163,255,0.5), transparent);
+        }
+        .mission-card.iceborne:hover {
+            border-color: #4aa3ff;
+            box-shadow: 0 0 30px rgba(74,163,255,0.6), inset 0 0 25px rgba(74,163,255,0.15), 0 0 50px rgba(74,163,255,0.25), 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .mission-mode {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .mission-card:not(.iceborne) .mission-mode {
+            color: #3efcff;
+            text-shadow: 0 0 12px #3efcff;
+        }
+        .mission-card.iceborne .mission-mode {
+            color: #4aa3ff;
+            text-shadow: 0 0 12px #4aa3ff, 0 0 25px rgba(74,163,255,0.3);
+        }
+
+        .mission-desc {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            color: rgba(200, 210, 220, 0.7);
+            line-height: 1.5;
+            letter-spacing: 1px;
+        }
+
+        .mission-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 12px currentColor);
+        }
+        .mission-card:not(.iceborne) .mission-icon { color: #3efcff; }
+        .mission-card.iceborne .mission-icon { color: #4aa3ff; }
+
+        .briefing-skip {
+            position: absolute;
+            bottom: 24px; right: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(62,252,255,0.3);
+            cursor: pointer;
+            transition: color 0.2s, text-shadow 0.2s;
+            z-index: 20;
+        }
+        .briefing-skip:hover {
+            color: rgba(62,252,255,0.7);
+            text-shadow: 0 0 10px rgba(62,252,255,0.4);
+        }
+
+        /* Snowflake / ice particles */
+        .snowflakes {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 3;
+        }
+        .snowflake {
+            position: absolute;
+            top: -5%;
+            color: rgba(180, 210, 255, 0.5);
+            animation: snowfall linear infinite;
+        }
+        .snowflake.large {
+            color: rgba(200, 225, 255, 0.3);
+            filter: blur(1px);
+        }
+        .snowflake.bright {
+            color: rgba(180, 220, 255, 0.8);
+            text-shadow: 0 0 6px rgba(130,190,255,0.6);
+        }
+        @keyframes snowfall {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+            5% { opacity: 0.6; }
+            85% { opacity: 0.3; }
+            100% { transform: translateY(110vh) translateX(30px) rotate(360deg); opacity: 0; }
+        }
+        /* Wind gust variation */
+        .snowflake.gust {
+            animation: snowGust linear infinite;
+        }
+        @keyframes snowGust {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+            5% { opacity: 0.5; }
+            30% { transform: translateY(33vh) translateX(60px) rotate(120deg); }
+            60% { transform: translateY(66vh) translateX(-20px) rotate(240deg); }
+            100% { transform: translateY(110vh) translateX(40px) rotate(400deg); opacity: 0; }
+        }
+
         /* ═══ Responsive ═══ */
         @media (max-width: 768px) {
             .vitals { width: 200px; }
@@ -505,11 +992,58 @@
             .score-value { font-size: 24px; }
             .ammo-display { font-size: 22px; }
             .minimap { width: 120px; height: 120px; bottom: 170px; }
+            .briefing-title { font-size: 36px; letter-spacing: 6px; }
+            .briefing-lore { font-size: 16px; max-width: 90%; }
+            .briefing-missions { flex-direction: column; gap: 16px; }
+            .mission-card { width: 240px; padding: 16px 14px; }
+            .neon-logo { width: 45px; height: 45px; }
+            .briefing-title-row { gap: 12px; }
+            .koldhart-ghost { width: 200px; height: 200px; }
         }
     </style>
 </head>
 <body>
     <div class="hud-container">
+        <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
+        <div class="briefing-screen" id="briefingScreen">
+            <div class="briefing-map"></div>
+            <div class="briefing-vignette"></div>
+            <div class="briefing-frost"></div>
+            <div class="frost-corner tl"></div>
+            <div class="frost-corner tr"></div>
+            <div class="frost-corner bl"></div>
+            <div class="frost-corner br"></div>
+            <div class="briefing-fog"></div>
+            <div class="snowflakes" id="snowflakes"></div>
+            <div class="lightning-flash" id="lightningFlash"></div>
+            <div class="koldhart-ghost" id="koldhartGhost">
+                <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_3890f04a024c327222fbaeed818687b6.png" alt="Koldhart">
+            </div>
+            <div class="briefing-content">
+                <div class="briefing-title-row" id="briefingTitleRow">
+                    <div class="neon-logo"><img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d82ec79a8b8c7c433603aa869f3ff4ba.png" alt="DinoDawgs"></div>
+                    <div class="briefing-title" id="briefingTitle">DINODAWGS</div>
+                    <div class="neon-logo flip"><img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d82ec79a8b8c7c433603aa869f3ff4ba.png" alt="DinoDawgs"></div>
+                </div>
+                <div class="briefing-subtitle" id="briefingSubtitle">War Council Briefing</div>
+                <div class="briefing-lore" id="briefingLore"></div>
+                <div class="briefing-divider" id="briefingDivider"></div>
+                <div class="briefing-missions" id="briefingMissions">
+                    <div class="mission-card" onclick="selectMission('arena')">
+                        <div class="mission-icon">&#x2694;</div>
+                        <div class="mission-mode">Arena Deathmatch</div>
+                        <div class="mission-desc">Free-for-all. 8 players. First to 20 kills.</div>
+                    </div>
+                    <div class="mission-card iceborne" onclick="selectMission('iceborne')">
+                        <div class="mission-icon">&#x2744;</div>
+                        <div class="mission-mode">Battle of the Iceborne</div>
+                        <div class="mission-desc">Clear the arena. Kill them all. Face Koldhart.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="briefing-skip" id="briefingSkip" onclick="skipBriefing()">SKIP &gt;&gt;</div>
+        </div>
+
         <!-- HUD Toggle Button (always visible, has pointer-events) -->
         <div class="hud-toggle" id="hudToggle" onclick="toggleHud()">
             <svg class="eye-open" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1000,6 +1534,8 @@
             }
             if (msg === 'hit_1') { flashHit(); return; }
             if (msg === 'toggle_1') { toggleHud(); return; }
+            if (msg === 'briefing_skip') { skipBriefing(); return; }
+            if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
 
             // Standard key_value
             const sep = msg.indexOf('_');
@@ -1061,6 +1597,193 @@
             el.classList.toggle('hud-hidden', !hudVisible);
             btn.classList.toggle('hidden', !hudVisible);
         }
+
+        // ═══════════════════════════════════════════
+        // ══ MISSION BRIEFING                      ══
+        // ═══════════════════════════════════════════
+        let briefingActive = true;
+        const briefingScreen = $('briefingScreen');
+        const briefingTitle = $('briefingTitle');
+        const briefingSub = $('briefingSubtitle');
+        const briefingLore = $('briefingLore');
+        const briefingMissions = $('briefingMissions');
+        const briefingSkipBtn = $('briefingSkip');
+
+        // Hide gameplay HUD during briefing
+        $('hudElements').style.display = 'none';
+        $('hudToggle').style.display = 'none';
+
+        const lightningFlash = $('lightningFlash');
+
+        // Snowflake / ice particle system — varied sizes, speeds, wind gusts
+        (function spawnSnow() {
+            const container = $('snowflakes');
+            const chars = ['*', '\u2022', '\u00B7', '\u2744', '\u2736'];
+            for (let i = 0; i < 40; i++) {
+                const flake = document.createElement('div');
+                const isLarge = Math.random() < 0.15;
+                const isBright = Math.random() < 0.1;
+                const isGust = Math.random() < 0.25;
+                flake.className = 'snowflake' + (isLarge ? ' large' : '') + (isBright ? ' bright' : '') + (isGust ? ' gust' : '');
+                flake.textContent = isLarge ? chars[3] : chars[Math.floor(Math.random() * 3)];
+                flake.style.left = Math.random() * 100 + '%';
+                flake.style.animationDuration = (isLarge ? 10 : 5) + Math.random() * 8 + 's';
+                flake.style.animationDelay = Math.random() * 12 + 's';
+                flake.style.fontSize = isLarge ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px';
+                container.appendChild(flake);
+            }
+        })();
+
+        // Lightning system — random flashes with screen shake
+        let lightningEnabled = true;
+        function triggerLightning() {
+            if (!lightningEnabled || !briefingActive) return;
+            const isDouble = Math.random() < 0.35;
+
+            // Flash overlay
+            lightningFlash.className = 'lightning-flash';
+            void lightningFlash.offsetWidth;
+            lightningFlash.classList.add(isDouble ? 'double' : 'strike');
+
+            // Screen shake
+            briefingScreen.classList.remove('shake');
+            void briefingScreen.offsetWidth;
+            briefingScreen.classList.add('shake');
+            setTimeout(() => briefingScreen.classList.remove('shake'), 200);
+
+            // Schedule next
+            const next = 3000 + Math.random() * 8000;
+            setTimeout(triggerLightning, next);
+        }
+        // First strike after 2-5 seconds
+        setTimeout(triggerLightning, 2000 + Math.random() * 3000);
+
+        // Lore sequence
+        const LORE_LINES = [
+            { text: 'The North. Where the wind whips through you like steel through butter.', cls: 'lore-line' },
+            { text: 'Impassable. Inhospitable. Impenetrable.', cls: 'lore-line' },
+            { text: 'The Iceborne were led by the most enigmatic of warrior leaders... Koldhart.', cls: 'lore-line', prePause: 400 },
+            { text: 'Heart of black. Eyes of blue.', cls: 'lore-rhyme', prePause: 500 },
+            { text: ' Sleep now child, lest Koldhart get you...', cls: 'lore-rhyme' },
+        ];
+
+        let twLineIdx = 0, twCharIdx = 0, twTimer = null;
+        let twCurrentSpan = null;
+        const twCursor = document.createElement('span');
+        twCursor.className = 'briefing-cursor';
+
+        function typeNextChar() {
+            if (twLineIdx >= LORE_LINES.length) {
+                // Done typing — remove cursor, show divider + missions
+                if (twCursor.parentNode) twCursor.remove();
+                setTimeout(() => {
+                    $('briefingDivider').classList.add('visible');
+                    setTimeout(() => briefingMissions.classList.add('visible'), 400);
+                }, 300);
+                return;
+            }
+
+            const line = LORE_LINES[twLineIdx];
+
+            // Create span for new line
+            if (!twCurrentSpan) {
+                // Pre-pause before this line starts (replaces empty pause lines)
+                if (line.prePause && twCharIdx === 0) {
+                    twCharIdx = -1; // flag: pause consumed
+                    twTimer = setTimeout(typeNextChar, line.prePause);
+                    return;
+                }
+                if (twCharIdx === -1) twCharIdx = 0; // resume after prePause
+
+                twCurrentSpan = document.createElement('span');
+                twCurrentSpan.className = line.cls;
+                briefingLore.appendChild(twCurrentSpan);
+                // Dramatic lightning on "Koldhart" line (idx 2) and first rhyme (idx 3)
+                if (twLineIdx === 2 || twLineIdx === 3) {
+                    lightningFlash.className = 'lightning-flash';
+                    void lightningFlash.offsetWidth;
+                    lightningFlash.classList.add('double');
+                    briefingScreen.classList.remove('shake');
+                    void briefingScreen.offsetWidth;
+                    briefingScreen.classList.add('shake');
+                    setTimeout(() => briefingScreen.classList.remove('shake'), 200);
+                }
+                // Koldhart ghost fades in on the LAST line (the rhyme about him)
+                if (twLineIdx === 4) {
+                    $('koldhartGhost').classList.add('visible');
+                }
+            }
+
+            // Type one character
+            if (twCharIdx < line.text.length) {
+                twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1);
+                // Keep cursor after text
+                if (twCursor.parentNode) twCursor.remove();
+                twCurrentSpan.appendChild(twCursor);
+                twCharIdx++;
+                const delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35);
+                twTimer = setTimeout(typeNextChar, delay);
+            } else {
+                // Line done
+                if (twCursor.parentNode) twCursor.remove();
+                twLineIdx++;
+                twCharIdx = 0;
+                twCurrentSpan = null;
+                twTimer = setTimeout(typeNextChar, 500);
+            }
+        }
+
+        function startBriefing() {
+            // Fade in title row (logos + DINODAWGS together)
+            setTimeout(() => $('briefingTitleRow').classList.add('visible'), 300);
+            setTimeout(() => briefingSub.classList.add('visible'), 600);
+            // Start typewriter after title settles
+            setTimeout(typeNextChar, 2200);
+        }
+
+        function skipBriefing() {
+            // Skip typewriter, show everything instantly
+            if (twTimer) clearTimeout(twTimer);
+            if (twCursor.parentNode) twCursor.remove();
+            briefingLore.innerHTML = '';
+            LORE_LINES.forEach(line => {
+                const span = document.createElement('span');
+                span.className = line.cls;
+                span.textContent = line.text;
+                briefingLore.appendChild(span);
+            });
+            $('briefingTitleRow').classList.add('visible');
+            briefingSub.classList.add('visible');
+            $('koldhartGhost').classList.add('visible');
+            $('briefingDivider').classList.add('visible');
+            briefingMissions.classList.add('visible');
+        }
+
+        function selectMission(mode) {
+            if (!briefingActive) return;
+            briefingActive = false;
+            lightningEnabled = false;
+
+            // Fade out briefing first (before any SDK calls that might throw)
+            briefingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                briefingScreen.classList.add('hidden');
+                // Show gameplay HUD
+                $('hudElements').style.display = '';
+                $('hudToggle').style.display = '';
+            }, 900);
+
+            // Send mission choice to Portals (non-blocking)
+            try {
+                const msg = mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena';
+                if (typeof PortalsSdk !== 'undefined') {
+                    window.parent.postMessage(msg, '*');
+                }
+            } catch(e) {}
+        }
+
+        // Start the briefing sequence on load
+        startBriefing();
 
         // ══ INIT ══
         updateHealth(100);
