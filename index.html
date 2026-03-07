@@ -340,20 +340,66 @@
         function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
         function setBoost(on) { if (on) boostInd.classList.add('active'); else boostInd.classList.remove('active'); }
 
-        // ══ MINIMAP ══
-        var MM = { mapUrl: 'https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-02-26_30af5521c286f605087bc350e85c6634.png', xMin: -490.99, xMax: 180.46, zMin: -364.42, zMax: 92.07, imgW: 607, imgH: 608, size: 160, radius: 80, zoom: 3.0 };
+        // ══ MINIMAP (RADAR STYLE) ══
+        var MM = { size: 160, radius: 80, range: 80 };
         var mmCanvas = $('minimapCanvas'), mmCtx = mmCanvas.getContext('2d');
-        var mmImg = new Image(); mmImg.crossOrigin = 'anonymous'; mmImg.src = MM.mapUrl;
         var mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
         var mmAllPos = {}, mmAllRot = {};
         var mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
-        function mmW2I(wx, wz) { return { x: (wx - MM.xMin) / (MM.xMax - MM.xMin) * MM.imgW, y: (MM.zMax - wz) / (MM.zMax - MM.zMin) * MM.imgH }; }
         function mmLerp(a, b, t) { return a + (b - a) * t; }
         function mmLerpA(a, b, t) { var d = b - a; while (d > 180) d -= 360; while (d < -180) d += 360; return a + d * t; }
         function mmParsePos(msg) { var m = msg.match(/"([^"]+)"pos:\{(.+)\}/); if (!m) return false; if (!mmMyName) mmMyName = m[1]; var re = /"([^"]+)"\s*=\s*"\(([^)]+)\)"/g; var mt; while ((mt = re.exec(m[2])) !== null) { var c = mt[2].split(','); mmAllPos[mt[1]] = { x: parseFloat(c[0]) || 0, z: parseFloat(c[2]) || 0 }; if (mt[1] === mmMyName) { mmPX = mmAllPos[mt[1]].x; mmPZ = mmAllPos[mt[1]].z; } } return true; }
         function mmParseRot(msg) { var m = msg.match(/"([^"]+)"rot:\{(.+)\}/); if (!m) return false; var re = /"([^"]+)"\s*=\s*"([^"]+)"/g; var mt; while ((mt = re.exec(m[2])) !== null) { mmAllRot[mt[1]] = parseFloat(mt[2]) || 0; if (mt[1] === mmMyName) mmRot = mmAllRot[mt[1]]; } return true; }
         var mmLast = 0;
-        function mmDraw(now) { requestAnimationFrame(mmDraw); if (!mmReady || !mmImg.complete) return; var dt = mmLast ? (now - mmLast) / 1000 : 0.016; mmLast = now; var t = 1 - Math.pow(0.85, dt * 60); mmDX = mmLerp(mmDX, mmPX, t); mmDZ = mmLerp(mmDZ, mmPZ, t); mmDR = mmLerpA(mmDR, mmRot, t); mmDR = ((mmDR % 360) + 360) % 360; var r = MM.radius; var si = mmW2I(mmDX, mmDZ); var a = -mmDR * Math.PI / 180; var z = MM.zoom; mmCtx.clearRect(0, 0, MM.size, MM.size); mmCtx.save(); mmCtx.beginPath(); mmCtx.arc(r, r, r, 0, Math.PI * 2); mmCtx.clip(); mmCtx.fillStyle = 'rgba(20, 25, 30, 0.85)'; mmCtx.fillRect(0, 0, MM.size, MM.size); mmCtx.translate(r, r); mmCtx.rotate(a); mmCtx.scale(z, z); mmCtx.drawImage(mmImg, -si.x, -si.y); for (var n in mmAllPos) { if (n === mmMyName) continue; var oImg = mmW2I(mmAllPos[n].x, mmAllPos[n].z); var dx = oImg.x - si.x; var dy = oImg.y - si.y; var dist = Math.sqrt(dx * dx + dy * dy) * z; if (dist < r - 4) { mmCtx.fillStyle = '#ff6b6b'; mmCtx.beginPath(); mmCtx.arc(dx, dy, 2.5 / z, 0, Math.PI * 2); mmCtx.fill(); } } mmCtx.restore(); $('mmDebug').textContent = 'X:' + mmDX.toFixed(0) + ' Z:' + mmDZ.toFixed(0) + ' R:' + mmDR.toFixed(0); mmCtx.save(); mmCtx.fillStyle = 'rgba(62,252,255,0.5)'; mmCtx.font = '9px Orbitron'; mmCtx.textAlign = 'center'; mmCtx.fillText('N', r + Math.sin(-a) * (r - 10), r - Math.cos(-a) * (r - 10) + 3); mmCtx.restore(); }
+        function mmDraw(now) {
+            requestAnimationFrame(mmDraw);
+            if (!mmReady) return;
+            var dt = mmLast ? (now - mmLast) / 1000 : 0.016; mmLast = now;
+            var t = 1 - Math.pow(0.85, dt * 60);
+            mmDX = mmLerp(mmDX, mmPX, t); mmDZ = mmLerp(mmDZ, mmPZ, t);
+            mmDR = mmLerpA(mmDR, mmRot, t); mmDR = ((mmDR % 360) + 360) % 360;
+            var r = MM.radius; var a = -mmDR * Math.PI / 180;
+            mmCtx.clearRect(0, 0, MM.size, MM.size);
+            mmCtx.save();
+            mmCtx.beginPath(); mmCtx.arc(r, r, r, 0, Math.PI * 2); mmCtx.clip();
+            mmCtx.fillStyle = 'rgba(20, 25, 30, 0.85)'; mmCtx.fillRect(0, 0, MM.size, MM.size);
+            // Grid rings
+            mmCtx.strokeStyle = 'rgba(62,252,255,0.12)'; mmCtx.lineWidth = 1;
+            for (var i = 1; i <= 3; i++) { mmCtx.beginPath(); mmCtx.arc(r, r, r * i / 3, 0, Math.PI * 2); mmCtx.stroke(); }
+            // Crosshair lines
+            mmCtx.strokeStyle = 'rgba(62,252,255,0.08)';
+            mmCtx.beginPath(); mmCtx.moveTo(r, 0); mmCtx.lineTo(r, MM.size); mmCtx.moveTo(0, r); mmCtx.lineTo(MM.size, r); mmCtx.stroke();
+            // Other players (rotate relative to player facing)
+            mmCtx.save(); mmCtx.translate(r, r);
+            for (var n in mmAllPos) {
+                if (n === mmMyName) continue;
+                var dx = mmAllPos[n].x - mmDX; var dz = mmAllPos[n].z - mmDZ;
+                var dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist > MM.range) continue;
+                var scale = r / MM.range;
+                var rx = Math.cos(a) * dx - Math.sin(a) * (-dz);
+                var ry = Math.sin(a) * dx + Math.cos(a) * (-dz);
+                rx *= scale; ry *= scale;
+                if (Math.sqrt(rx * rx + ry * ry) < r - 4) {
+                    mmCtx.fillStyle = '#ff6b6b'; mmCtx.shadowColor = '#ff6b6b'; mmCtx.shadowBlur = 6;
+                    mmCtx.beginPath(); mmCtx.arc(rx, ry, 3, 0, Math.PI * 2); mmCtx.fill();
+                    mmCtx.shadowBlur = 0;
+                }
+            }
+            mmCtx.restore();
+            // N indicator
+            mmCtx.save(); mmCtx.fillStyle = 'rgba(62,252,255,0.5)'; mmCtx.font = '9px Orbitron'; mmCtx.textAlign = 'center';
+            mmCtx.fillText('N', r + Math.sin(-a) * (r - 10), r - Math.cos(-a) * (r - 10) + 3);
+            mmCtx.restore();
+            // Sweep line
+            var sweep = (now / 2000) % (Math.PI * 2);
+            mmCtx.save(); mmCtx.translate(r, r); mmCtx.rotate(sweep);
+            mmCtx.strokeStyle = 'rgba(62,252,255,0.15)'; mmCtx.lineWidth = 1;
+            mmCtx.beginPath(); mmCtx.moveTo(0, 0); mmCtx.lineTo(0, -r); mmCtx.stroke();
+            mmCtx.restore();
+            mmCtx.restore();
+            $('mmDebug').textContent = 'X:' + mmDX.toFixed(0) + ' Z:' + mmDZ.toFixed(0) + ' R:' + mmDR.toFixed(0);
+        }
         requestAnimationFrame(mmDraw);
 
         // ══ MESSAGE HANDLER ══
@@ -374,12 +420,12 @@
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
                 case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); break;
-                case 'death': S.deaths = val; S.streak = 0; updateScore(); updateStreak(); break;
+                case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
                 case 'start': if (val === 1) showOverlay('MATCH START', 'FIGHT FOR SURVIVAL', '#3efcff', 2500); break;
                 case 'gameover': if (val === 1) { var kd2 = S.deaths === 0 ? S.kills : (S.kills / S.deaths).toFixed(2); showOverlay('MATCH OVER', S.kills + ' KILLS  /  K/D: ' + kd2, '#ffd700', 5000); } break;
-                case 'dead': if (val === 1) showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000); break;
+                case 'dead': if (val === 1) { S.deaths++; S.streak = 0; updateScore(); updateStreak(); showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000); } break;
                 case 'respawn': if (val === 1) { updateHealth(100); S.streak = 0; updateStreak(); } break;
             }
         }
