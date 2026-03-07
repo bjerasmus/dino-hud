@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>DinoDawgs Battle HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +20,9 @@
             color: #3efcff;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         body { pointer-events: none; }
@@ -1756,14 +1759,23 @@
             lightningEnabled = false;
             fadeOutAudio();
 
-            // Fade out briefing first (before any SDK calls that might throw)
+            // Make body click-through immediately so game receives input
+            document.body.style.pointerEvents = 'none';
+            document.documentElement.style.pointerEvents = 'none';
+
+            // Give keyboard focus back to game immediately
+            if (typeof PortalsSdk !== 'undefined') {
+                try { PortalsSdk.focusGameKeyboard(); } catch(e) {}
+            }
+
+            // Fade out briefing
             briefingScreen.classList.add('fade-out');
             setTimeout(function() {
                 briefingScreen.classList.add('hidden');
                 // Show gameplay HUD
                 $('hudElements').style.display = '';
                 $('hudToggle').style.display = '';
-                // Now give keyboard focus back to game
+                // Re-focus game keyboard (belt and suspenders)
                 if (typeof PortalsSdk !== 'undefined') {
                     try { PortalsSdk.focusGameKeyboard(); } catch(e) {}
                 }
