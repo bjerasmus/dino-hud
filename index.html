@@ -210,7 +210,7 @@
     </style>
 </head>
 <body>
-    <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
+    <audio id="bgDrums" loop preload="auto" autoplay src="tribal_drums.mp3"></audio>
 
 
     <div class="hud-container">
@@ -443,7 +443,13 @@
         $('hudElements').style.display = 'none';
         $('hudToggle').style.display = 'none';
 
-        // No click-based audio — noPointerEvents prevents clicks reaching iframe
+        // Try autoplay drums — retry every 2s in case browser blocks first attempt
+        (function() {
+            var d = document.getElementById('bgDrums'); if (!d) return;
+            d.volume = 0.4;
+            function tryPlay() { d.play().catch(function() { setTimeout(tryPlay, 2000); }); }
+            tryPlay();
+        })();
 
         // Snowflakes
         (function() { var c = $('snowflakes'); var ch = ['*','\u2022','\u00B7','\u2744','\u2736']; for (var i = 0; i < 40; i++) { var f = document.createElement('div'); var lg = Math.random() < 0.15; var br = Math.random() < 0.1; var gu = Math.random() < 0.25; f.className = 'snowflake' + (lg ? ' large' : '') + (br ? ' bright' : '') + (gu ? ' gust' : ''); f.textContent = lg ? ch[3] : ch[Math.floor(Math.random() * 3)]; f.style.left = Math.random() * 100 + '%'; f.style.animationDuration = (lg ? 10 : 5) + Math.random() * 8 + 's'; f.style.animationDelay = Math.random() * 12 + 's'; f.style.fontSize = lg ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px'; c.appendChild(f); } })();
