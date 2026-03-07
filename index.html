@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
-    <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -820,6 +819,7 @@
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
+            pointer-events: auto !important;
         }
         /* Shimmer sweep on hover */
         .mission-card::before {
@@ -905,6 +905,7 @@
             cursor: pointer;
             transition: color 0.2s, text-shadow 0.2s;
             z-index: 20;
+            pointer-events: auto !important;
         }
         .briefing-skip:hover {
             color: rgba(62,252,255,0.7);
@@ -972,6 +973,7 @@
     </style>
 </head>
 <body>
+    <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
     <div class="hud-container">
         <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
         <div class="briefing-screen" id="briefingScreen">
@@ -1543,7 +1545,8 @@
         // ══ PORTALS SDK ══
         if (typeof PortalsSdk !== 'undefined') {
             PortalsSdk.setMessageListener(function(message) { handleMsg(message); });
-            PortalsSdk.focusGameKeyboard();
+            // Don't focusGameKeyboard during briefing - it steals input
+            // Will call it after mission is selected
         }
 
         // Fallback for browser testing
@@ -1755,18 +1758,34 @@
 
             // Fade out briefing first (before any SDK calls that might throw)
             briefingScreen.classList.add('fade-out');
-            setTimeout(() => {
+            setTimeout(function() {
                 briefingScreen.classList.add('hidden');
                 // Show gameplay HUD
                 $('hudElements').style.display = '';
                 $('hudToggle').style.display = '';
+                // Now give keyboard focus back to game
+                if (typeof PortalsSdk !== 'undefined') {
+                    try { PortalsSdk.focusGameKeyboard(); } catch(e) {}
+                }
             }, 900);
 
             // Send mission choice to Portals (non-blocking)
             try {
-                const msg = mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena';
+                var msg = mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena';
                 window.parent.postMessage(msg, '*');
             } catch(e) {}
+        }
+
+        // Add JS event listeners as backup for onclick (more reliable in iframes)
+        document.querySelectorAll('.mission-card').forEach(function(card) {
+            var mode = card.classList.contains('iceborne') ? 'iceborne' : 'arena';
+            card.addEventListener('click', function(e) { e.stopPropagation(); selectMission(mode); });
+            card.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); selectMission(mode); });
+        });
+        var skipBtn = $('briefingSkip');
+        if (skipBtn) {
+            skipBtn.addEventListener('click', function(e) { e.stopPropagation(); skipBriefing(); });
+            skipBtn.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); skipBriefing(); });
         }
 
         // Start the briefing sequence on load
