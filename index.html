@@ -1648,7 +1648,10 @@
                 if (twCursor.parentNode) twCursor.remove();
                 setTimeout(() => {
                     $('briefingDivider').classList.add('visible');
-                    setTimeout(() => briefingMissions.classList.add('visible'), 400);
+                    setTimeout(() => {
+                        briefingMissions.classList.add('visible');
+                        startAutoCountdown();
+                    }, 400);
                 }, 300);
                 return;
             }
@@ -1751,6 +1754,7 @@
             briefingSub.classList.add('visible');
             $('briefingDivider').classList.add('visible');
             briefingMissions.classList.add('visible');
+            startAutoCountdown();
         }
 
         function selectMission(mode) {
@@ -1759,15 +1763,6 @@
             lightningEnabled = false;
             fadeOutAudio();
 
-            // Make body click-through immediately so game receives input
-            document.body.style.pointerEvents = 'none';
-            document.documentElement.style.pointerEvents = 'none';
-
-            // Give keyboard focus back to game immediately
-            if (typeof PortalsSdk !== 'undefined') {
-                try { PortalsSdk.focusGameKeyboard(); } catch(e) {}
-            }
-
             // Fade out briefing
             briefingScreen.classList.add('fade-out');
             setTimeout(function() {
@@ -1775,10 +1770,6 @@
                 // Show gameplay HUD
                 $('hudElements').style.display = '';
                 $('hudToggle').style.display = '';
-                // Re-focus game keyboard (belt and suspenders)
-                if (typeof PortalsSdk !== 'undefined') {
-                    try { PortalsSdk.focusGameKeyboard(); } catch(e) {}
-                }
             }, 900);
 
             // Send mission choice to Portals (non-blocking)
@@ -1788,16 +1779,22 @@
             } catch(e) {}
         }
 
-        // Add JS event listeners as backup for onclick (more reliable in iframes)
-        document.querySelectorAll('.mission-card').forEach(function(card) {
-            var mode = card.classList.contains('iceborne') ? 'iceborne' : 'arena';
-            card.addEventListener('click', function(e) { e.stopPropagation(); selectMission(mode); });
-            card.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); selectMission(mode); });
-        });
-        var skipBtn = $('briefingSkip');
-        if (skipBtn) {
-            skipBtn.addEventListener('click', function(e) { e.stopPropagation(); skipBriefing(); });
-            skipBtn.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); skipBriefing(); });
+        // Auto-start countdown after mission cards are shown
+        function startAutoCountdown() {
+            var countEl = document.createElement('div');
+            countEl.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;';
+            briefingMissions.parentNode.appendChild(countEl);
+            var sec = 5;
+            countEl.textContent = 'AUTO-START IN ' + sec + '...';
+            var iv = setInterval(function() {
+                sec--;
+                if (sec <= 0) {
+                    clearInterval(iv);
+                    selectMission('arena');
+                } else {
+                    countEl.textContent = 'AUTO-START IN ' + sec + '...';
+                }
+            }, 1000);
         }
 
         // Start the briefing sequence on load
