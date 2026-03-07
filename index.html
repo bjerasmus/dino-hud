@@ -232,7 +232,7 @@
                 <div class="briefing-lore" id="briefingLore"></div>
                 <div class="briefing-divider" id="briefingDivider"></div>
                 <div class="briefing-missions" id="briefingMissions">
-                    <div class="mission-card" onclick="selectMission('arena')">
+                    <div class="mission-card">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
                         <div class="mission-desc">Free-for-all. 8 players. First to 20 kills.</div>
@@ -240,14 +240,14 @@
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
                     </div>
-                    <div class="mission-card iceborne" onclick="selectMission('iceborne')">
+                    <div class="mission-card iceborne">
                         <div class="mission-icon">&#x2744;</div>
                         <div class="mission-mode">Battle of the Iceborne</div>
                         <div class="mission-desc">Clear the arena. Kill them all. Face Koldhart.</div>
                     </div>
                 </div>
             </div>
-            <div class="briefing-skip" id="briefingSkip" onclick="skipBriefing()">SKIP &gt;&gt;</div>
+            <div class="briefing-skip" id="briefingSkip">AUTO-START</div>
         </div>
 
         <!-- HUD Toggle -->
@@ -443,13 +443,7 @@
         $('hudElements').style.display = 'none';
         $('hudToggle').style.display = 'none';
 
-        // Play drums on first click anywhere on briefing screen (satisfies browser autoplay policy)
-        var drumsStarted = false;
-        briefingScreen.addEventListener('click', function() {
-            if (drumsStarted) return; drumsStarted = true;
-            var bgDrums = document.getElementById('bgDrums');
-            if (bgDrums) { bgDrums.volume = 0.5; bgDrums.play().catch(function(){}); }
-        });
+        // No click-based audio — noPointerEvents prevents clicks reaching iframe
 
         // Snowflakes
         (function() { var c = $('snowflakes'); var ch = ['*','\u2022','\u00B7','\u2744','\u2736']; for (var i = 0; i < 40; i++) { var f = document.createElement('div'); var lg = Math.random() < 0.15; var br = Math.random() < 0.1; var gu = Math.random() < 0.25; f.className = 'snowflake' + (lg ? ' large' : '') + (br ? ' bright' : '') + (gu ? ' gust' : ''); f.textContent = lg ? ch[3] : ch[Math.floor(Math.random() * 3)]; f.style.left = Math.random() * 100 + '%'; f.style.animationDuration = (lg ? 10 : 5) + Math.random() * 8 + 's'; f.style.animationDelay = Math.random() * 12 + 's'; f.style.fontSize = lg ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px'; c.appendChild(f); } })();
