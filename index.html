@@ -194,8 +194,7 @@
         .snowflake.gust { animation: snowGust linear infinite; }
         @keyframes snowGust { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; } 5% { opacity: 0.5; } 30% { transform: translateY(33vh) translateX(60px) rotate(120deg); } 60% { transform: translateY(66vh) translateX(-20px) rotate(240deg); } 100% { transform: translateY(110vh) translateX(40px) rotate(400deg); opacity: 0; } }
 
-        /* Audio unlock overlay */
-        .audio-unlock { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; pointer-events: auto; cursor: pointer; }
+        /* Audio unlock removed — no longer needed without noPointerEvents */
 
         @media (max-width: 768px) {
             .vitals { width: 200px; } .weapon-panel { width: 180px; } .score-panel { width: 170px; }
@@ -213,8 +212,6 @@
 <body>
     <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
 
-    <!-- Invisible overlay to unlock audio on first click (Bus's suggestion) -->
-    <div class="audio-unlock" id="audioUnlock"></div>
 
     <div class="hud-container">
         <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
@@ -446,13 +443,12 @@
         $('hudElements').style.display = 'none';
         $('hudToggle').style.display = 'none';
 
-        // Audio unlock: transparent overlay catches first click to satisfy browser autoplay policy
-        // (Bus's suggestion: one element covering entire screen, disappears after one click)
-        var audioUnlock = $('audioUnlock');
-        audioUnlock.addEventListener('click', function() {
+        // Play drums on first click anywhere on briefing screen (satisfies browser autoplay policy)
+        var drumsStarted = false;
+        briefingScreen.addEventListener('click', function() {
+            if (drumsStarted) return; drumsStarted = true;
             var bgDrums = document.getElementById('bgDrums');
             if (bgDrums) { bgDrums.volume = 0.5; bgDrums.play().catch(function(){}); }
-            audioUnlock.style.display = 'none';
         });
 
         // Snowflakes
