@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DinoDawgs Battle HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Bungee&family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,953 +20,188 @@
             color: #3efcff;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
         }
 
         body { pointer-events: none; }
 
-        .hud-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-        }
+        .hud-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-        /* ═══ Ancient Tech Panel ═══ */
         .panel {
             background: rgba(20, 25, 30, 0.55);
-            border: 2px solid #3efcff;
-            border-radius: 12px;
-            padding: 12px 16px;
+            border: 2px solid #3efcff; border-radius: 12px; padding: 12px 16px;
             box-shadow: 0 0 12px #3efcff, inset 0 0 18px rgba(0,255,255,0.15);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
         }
 
-        /* ═══ Bottom-Left: VITALS ═══ */
-        .vitals {
-            position: absolute;
-            bottom: 30px; left: 30px;
-            width: 280px;
-        }
-
-        .vitals .label {
-            font-size: 11px; font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 8px #3efcff;
-        }
-
+        .vitals { position: absolute; bottom: 30px; left: 30px; width: 280px; }
+        .vitals .label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 3px; text-shadow: 0 0 8px #3efcff; }
         .health-container { margin-bottom: 14px; }
         .armor-container { margin-bottom: 0; }
-
-        .bar-wrapper {
-            position: relative;
-            width: 100%; height: 30px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid rgba(62,252,255,0.3);
-        }
-
-        .bar {
-            position: absolute;
-            top: 0; left: 0;
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 6px;
-        }
-
-        .health-bar {
-            background: linear-gradient(90deg, #00ff88, #00ffaa);
-            box-shadow: 0 0 10px #00ff88;
-        }
-
-        .armor-bar {
-            background: linear-gradient(90deg, #4aa3ff, #7efcff);
-            box-shadow: 0 0 10px #4aa3ff;
-        }
-
-        .bar-text {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px; font-weight: 900;
-            color: white;
-            text-shadow: 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
-            z-index: 2;
-        }
+        .bar-wrapper { position: relative; width: 100%; height: 30px; background: rgba(0,0,0,0.6); border-radius: 6px; overflow: hidden; border: 1px solid rgba(62,252,255,0.3); }
+        .bar { position: absolute; top: 0; left: 0; height: 100%; transition: width 0.3s ease; border-radius: 6px; }
+        .health-bar { background: linear-gradient(90deg, #00ff88, #00ffaa); box-shadow: 0 0 10px #00ff88; }
+        .armor-bar { background: linear-gradient(90deg, #4aa3ff, #7efcff); box-shadow: 0 0 10px #4aa3ff; }
+        .bar-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px; font-weight: 900; color: white; text-shadow: 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6); z-index: 2; }
 
         .pulse-red { animation: pulseRed 0.8s ease-in-out infinite; }
         .pulse-blue { animation: pulseBlue 0.8s ease-in-out infinite; }
+        @keyframes pulseRed { 0%,100% { box-shadow: 0 0 10px #ff0000; } 50% { box-shadow: 0 0 25px #ff0000; filter: brightness(1.4); } }
+        @keyframes pulseBlue { 0%,100% { box-shadow: 0 0 10px #4aa3ff; } 50% { box-shadow: 0 0 25px #4aa3ff; filter: brightness(1.4); } }
 
-        @keyframes pulseRed {
-            0%,100% { box-shadow: 0 0 10px #ff0000; }
-            50% { box-shadow: 0 0 25px #ff0000; filter: brightness(1.4); }
-        }
-        @keyframes pulseBlue {
-            0%,100% { box-shadow: 0 0 10px #4aa3ff; }
-            50% { box-shadow: 0 0 25px #4aa3ff; filter: brightness(1.4); }
-        }
+        .boost-indicator { position: absolute; bottom: 170px; left: 30px; padding: 6px 14px; background: rgba(255,215,0,0.15); border: 2px solid #ffd700; border-radius: 8px; box-shadow: 0 0 12px #ffd700; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #ffd700; text-shadow: 0 0 8px #ffd700; display: none; }
+        .boost-indicator.active { display: block; animation: boostPulse 1s ease-in-out infinite; }
+        @keyframes boostPulse { 0%,100% { box-shadow: 0 0 12px #ffd700; } 50% { box-shadow: 0 0 24px #ffd700; } }
 
-        /* ═══ Boost Indicator ═══ */
-        .boost-indicator {
-            position: absolute;
-            bottom: 170px; left: 30px;
-            padding: 6px 14px;
-            background: rgba(255,215,0,0.15);
-            border: 2px solid #ffd700;
-            border-radius: 8px;
-            box-shadow: 0 0 12px #ffd700;
-            font-size: 12px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ffd700;
-            text-shadow: 0 0 8px #ffd700;
-            display: none;
-        }
-        .boost-indicator.active {
-            display: block;
-            animation: boostPulse 1s ease-in-out infinite;
-        }
-        @keyframes boostPulse {
-            0%,100% { box-shadow: 0 0 12px #ffd700; }
-            50% { box-shadow: 0 0 24px #ffd700; }
-        }
-
-        /* ═══ Bottom-Right: WEAPON ═══ */
-        .weapon-panel {
-            position: absolute;
-            bottom: 30px; right: 30px;
-            width: 240px;
-            text-align: center;
-        }
-
-        .weapon-icon {
-            width: 160px; height: 80px;
-            margin: 0 auto 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .weapon-icon img {
-            max-width: 100%; max-height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 8px #3efcff);
-        }
-
-        .weapon-svg {
-            fill: #3efcff;
-            filter: drop-shadow(0 0 8px #3efcff);
-        }
-
-        .weapon-name {
-            font-size: 14px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 6px;
-            text-shadow: 0 0 8px #3efcff;
-        }
-
-        .ammo-display {
-            font-size: 30px; font-weight: 900;
-            color: white;
-            text-shadow: 0 0 10px #3efcff;
-            letter-spacing: 2px;
-        }
+        .weapon-panel { position: absolute; bottom: 30px; right: 30px; width: 240px; text-align: center; }
+        .weapon-icon { width: 120px; height: 50px; margin: 0 auto 8px; }
+        .weapon-svg { fill: #3efcff; filter: drop-shadow(0 0 8px #3efcff); }
+        .weapon-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 0 8px #3efcff; }
+        .ammo-display { font-size: 30px; font-weight: 900; color: white; text-shadow: 0 0 10px #3efcff; letter-spacing: 2px; }
         .ammo-low { color: #ffaa00; text-shadow: 0 0 10px #ffaa00; }
         .ammo-empty { color: #ff3333; text-shadow: 0 0 10px #ff3333; animation: pulseRed 0.8s ease-in-out infinite; }
 
-        /* ═══ Top-Left: SCORE ═══ */
-        .score-panel {
-            position: absolute;
-            top: 30px; left: 30px;
-            width: 220px;
-        }
-
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
+        .score-panel { position: absolute; top: 30px; left: 30px; width: 220px; }
+        .score-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
         .score-item { text-align: center; flex: 1; }
-
-        .score-label {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 2px;
-            text-shadow: 0 0 6px #3efcff;
-        }
-
-        .score-value {
-            font-size: 32px; font-weight: 900;
-            color: white;
-            text-shadow: 0 0 10px #3efcff;
-        }
-
-        .kd-ratio {
-            text-align: center;
-            font-size: 14px; font-weight: 700;
-            padding-top: 8px;
-            border-top: 1px solid rgba(62,252,255,0.3);
-        }
-
-        .streak-badge {
-            text-align: center;
-            font-size: 12px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 10px;
-            padding: 6px 8px;
-            background: rgba(255,215,0,0.15);
-            border: 1px solid #ffd700;
-            border-radius: 6px;
-            color: #ffd700;
-            text-shadow: 0 0 8px #ffd700;
-            box-shadow: 0 0 10px rgba(255,215,0,0.4);
-            display: none;
-        }
+        .score-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; text-shadow: 0 0 6px #3efcff; }
+        .score-value { font-size: 32px; font-weight: 900; color: white; text-shadow: 0 0 10px #3efcff; }
+        .kd-ratio { text-align: center; font-size: 14px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(62,252,255,0.3); }
+        .streak-badge { text-align: center; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; padding: 6px 8px; background: rgba(255,215,0,0.15); border: 1px solid #ffd700; border-radius: 6px; color: #ffd700; text-shadow: 0 0 8px #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.4); display: none; }
         .streak-badge.active { display: block; }
 
-        /* ═══ Top-Center: TIMER (hidden default) ═══ */
-        .timer-panel {
-            position: absolute;
-            top: 30px; left: 50%;
-            transform: translateX(-50%);
-            min-width: 160px;
-            text-align: center;
-            display: none;
-        }
+        .timer-panel { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); min-width: 160px; text-align: center; display: none; }
         .timer-panel.active { display: block; }
+        .timer-display { font-size: 38px; font-weight: 900; color: white; text-shadow: 0 0 12px #3efcff; letter-spacing: 4px; }
+        .timer-warning { color: #ff3333; text-shadow: 0 0 12px #ff3333; animation: pulseRed 0.8s ease-in-out infinite; }
 
-        .timer-display {
-            font-size: 38px; font-weight: 900;
-            color: white;
-            text-shadow: 0 0 12px #3efcff;
-            letter-spacing: 4px;
-        }
-        .timer-warning {
-            color: #ff3333;
-            text-shadow: 0 0 12px #ff3333;
-            animation: pulseRed 0.8s ease-in-out infinite;
-        }
-
-        /* ═══ Top-Right: HUD TOGGLE ═══ */
-        .hud-toggle {
-            position: absolute;
-            top: 20px; right: 20px;
-            width: 44px; height: 44px;
-            border-radius: 10px;
-            background: rgba(20, 25, 30, 0.65);
-            border: 2px solid #3efcff;
-            box-shadow: 0 0 10px rgba(62,252,255,0.4);
-            backdrop-filter: blur(6px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            pointer-events: auto;
-            z-index: 1000;
-            transition: all 0.2s ease;
-        }
-        .hud-toggle:hover {
-            box-shadow: 0 0 18px rgba(62,252,255,0.7);
-            background: rgba(20, 25, 30, 0.85);
-        }
+        .hud-toggle { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; border-radius: 10px; background: rgba(20, 25, 30, 0.65); border: 2px solid #3efcff; box-shadow: 0 0 10px rgba(62,252,255,0.4); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; z-index: 1000; transition: all 0.2s ease; }
+        .hud-toggle:hover { box-shadow: 0 0 18px rgba(62,252,255,0.7); background: rgba(20, 25, 30, 0.85); }
         .hud-toggle:active { transform: scale(0.92); }
-        .hud-toggle svg {
-            width: 22px; height: 22px;
-            fill: #3efcff;
-            filter: drop-shadow(0 0 4px #3efcff);
-            transition: opacity 0.2s;
-        }
+        .hud-toggle svg { width: 22px; height: 22px; fill: #3efcff; filter: drop-shadow(0 0 4px #3efcff); transition: opacity 0.2s; }
         .hud-toggle.hidden svg.eye-open { display: none; }
         .hud-toggle:not(.hidden) svg.eye-closed { display: none; }
 
         .hud-elements.hud-hidden { opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
         .hud-elements { transition: opacity 0.25s ease; }
 
-        /* ═══ Bottom-Left: MINIMAP ═══ */
-        .minimap {
-            position: absolute;
-            bottom: 200px; left: 30px;
-            width: 160px; height: 160px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid #3efcff;
-            box-shadow: 0 0 12px #3efcff, inset 0 0 18px rgba(0,255,255,0.15);
-            background: rgba(20, 25, 30, 0.7);
-        }
-        .minimap canvas {
-            width: 100%; height: 100%;
-            display: block;
-        }
-        .minimap-arrow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -60%);
-            width: 0; height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 14px solid #3efcff;
-            filter: drop-shadow(0 0 6px #3efcff);
-            z-index: 2;
-            pointer-events: none;
-        }
-        .minimap-label {
-            position: absolute;
-            bottom: 4px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 8px; font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(62,252,255,0.6);
-            text-shadow: 0 0 4px rgba(62,252,255,0.3);
-            z-index: 3;
-            pointer-events: none;
-        }
-        .minimap-n { display: none; /* cardinal labels drawn on canvas */ }
+        .minimap { position: absolute; bottom: 200px; left: 30px; width: 160px; height: 160px; border-radius: 50%; overflow: hidden; border: 2px solid #3efcff; box-shadow: 0 0 12px #3efcff, inset 0 0 18px rgba(0,255,255,0.15); background: rgba(20, 25, 30, 0.7); }
+        .minimap canvas { width: 100%; height: 100%; display: block; }
+        .minimap-arrow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 14px solid #3efcff; filter: drop-shadow(0 0 6px #3efcff); z-index: 2; pointer-events: none; }
+        .minimap-label { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(62,252,255,0.6); text-shadow: 0 0 4px rgba(62,252,255,0.3); z-index: 3; pointer-events: none; }
+        .minimap-debug { position: absolute; top: -18px; left: 0; font-size: 9px; font-weight: 400; font-family: monospace; color: #3efcff; text-shadow: 0 0 4px rgba(0,0,0,0.8); z-index: 3; pointer-events: none; white-space: nowrap; }
 
-        /* ═══ Center: CROSSHAIR ═══ */
-        .crosshair {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px; height: 40px;
-        }
-
-        .xh-line {
-            position: absolute;
-            background: rgba(255,255,255,0.75);
-            transition: background 0.1s ease;
-        }
+        .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; }
+        .xh-line { position: absolute; background: rgba(255,255,255,0.75); transition: background 0.1s ease; }
         .xh-top { top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 12px; }
         .xh-bot { bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 12px; }
         .xh-lft { left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 2px; }
         .xh-rgt { right: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 2px; }
+        .xh-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 3px; height: 3px; background: rgba(255,255,255,0.85); border-radius: 50%; }
+        .crosshair.hit .xh-line, .crosshair.hit .xh-dot { background: #ff3333; box-shadow: 0 0 6px #ff3333; }
 
-        .xh-dot {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 3px; height: 3px;
-            background: rgba(255,255,255,0.85);
-            border-radius: 50%;
-        }
+        .kill-feed { position: absolute; top: calc(50% + 50px); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 4px; align-items: center; z-index: 200; }
+        .kf-msg { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #ff3333; text-shadow: 0 0 10px #ff3333, 0 0 20px rgba(255,51,51,0.4); padding: 4px 16px; background: rgba(255,0,0,0.1); border-left: 3px solid #ff3333; border-radius: 0 4px 4px 0; animation: kfSlide 2.5s ease-out forwards; }
+        @keyframes kfSlide { 0% { opacity: 0; transform: translateY(-10px) scale(0.95); } 8% { opacity: 1; transform: translateY(0) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
 
-        .crosshair.hit .xh-line, .crosshair.hit .xh-dot {
-            background: #ff3333;
-            box-shadow: 0 0 6px #ff3333;
-        }
+        .pickup-flash { position: absolute; top: 38%; left: 50%; transform: translateX(-50%); z-index: 300; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; opacity: 0; text-align: center; }
+        .pickup-flash.active { animation: pickupAnim 2s ease-out forwards; }
+        @keyframes pickupAnim { 0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); } 10% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); } 20% { transform: translateX(-50%) translateY(0) scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 
-        /* ═══ Kill Feed ═══ */
-        .kill-feed {
-            position: absolute;
-            top: calc(50% + 50px);
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            align-items: center;
-            z-index: 200;
-        }
+        .streak-announce { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); z-index: 400; opacity: 0; text-align: center; }
+        .streak-announce.active { animation: streakAnim 2.5s ease-out forwards; }
+        .streak-text { font-size: 42px; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 20px #ffd700, 0 0 40px rgba(255,215,0,0.5); }
+        @keyframes streakAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } 20% { transform: translate(-50%, -50%) scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95) translateY(-15px); } }
 
-        .kf-msg {
-            font-size: 16px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ff3333;
-            text-shadow: 0 0 10px #ff3333, 0 0 20px rgba(255,51,51,0.4);
-            padding: 4px 16px;
-            background: rgba(255,0,0,0.1);
-            border-left: 3px solid #ff3333;
-            border-radius: 0 4px 4px 0;
-            animation: kfSlide 2.5s ease-out forwards;
-        }
-
-        @keyframes kfSlide {
-            0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
-            8% { opacity: 1; transform: translateY(0) scale(1); }
-            75% { opacity: 1; }
-            100% { opacity: 0; transform: translateY(6px); }
-        }
-
-        /* ═══ Pickup Flash ═══ */
-        .pickup-flash {
-            position: absolute;
-            top: 38%; left: 50%;
-            transform: translateX(-50%);
-            z-index: 300;
-            font-size: 16px; font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            opacity: 0;
-            text-align: center;
-        }
-        .pickup-flash.active {
-            animation: pickupAnim 2s ease-out forwards;
-        }
-        @keyframes pickupAnim {
-            0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
-            10% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
-            20% { transform: translateX(-50%) translateY(0) scale(1); }
-            70% { opacity: 1; }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-        }
-
-        /* ═══ Streak Announce ═══ */
-        .streak-announce {
-            position: absolute;
-            top: 25%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 400;
-            opacity: 0;
-            text-align: center;
-        }
-        .streak-announce.active {
-            animation: streakAnim 2.5s ease-out forwards;
-        }
-        .streak-text {
-            font-size: 42px; font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #ffd700;
-            text-shadow: 0 0 20px #ffd700, 0 0 40px rgba(255,215,0,0.5);
-        }
-        @keyframes streakAnim {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
-            10% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
-            20% { transform: translate(-50%, -50%) scale(1); }
-            70% { opacity: 1; }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95) translateY(-15px); }
-        }
-
-        /* ═══ Game State Overlay ═══ */
-        .game-overlay {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 500;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
+        .game-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; text-align: center; opacity: 0; transition: opacity 0.5s; }
         .game-overlay.active { opacity: 1; }
+        .overlay-title { font-size: 56px; font-weight: 900; text-transform: uppercase; letter-spacing: 6px; margin-bottom: 12px; text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+        .overlay-subtitle { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: rgba(62,252,255,0.8); text-shadow: 0 0 10px #3efcff; }
 
-        .overlay-title {
-            font-size: 56px; font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 6px;
-            margin-bottom: 12px;
-            text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
-        }
-        .overlay-subtitle {
-            font-size: 18px; font-weight: 700;
-            letter-spacing: 3px;
-            color: rgba(62,252,255,0.8);
-            text-shadow: 0 0 10px #3efcff;
-        }
-
-        /* ═══ Damage Flash ═══ */
-        .damage-flash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 998;
-            opacity: 0;
-        }
-        .damage-flash.active {
-            animation: dmgFlash 0.4s ease-out forwards;
-        }
-        .damage-flash.critical {
-            animation: dmgCrit 0.5s ease-out forwards;
-        }
-        @keyframes dmgFlash {
-            0% { opacity: 1; background: radial-gradient(ellipse at center, transparent 40%, rgba(255,50,50,0.35) 100%); }
-            100% { opacity: 0; }
-        }
-        @keyframes dmgCrit {
-            0% { opacity: 1; background: radial-gradient(ellipse at center, transparent 20%, rgba(255,0,0,0.55) 100%); }
-            100% { opacity: 0; }
-        }
+        .damage-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 998; opacity: 0; }
+        .damage-flash.active { animation: dmgFlash 0.4s ease-out forwards; }
+        .damage-flash.critical { animation: dmgCrit 0.5s ease-out forwards; }
+        @keyframes dmgFlash { 0% { opacity: 1; background: radial-gradient(ellipse at center, transparent 40%, rgba(255,50,50,0.35) 100%); } 100% { opacity: 0; } }
+        @keyframes dmgCrit { 0% { opacity: 1; background: radial-gradient(ellipse at center, transparent 20%, rgba(255,0,0,0.55) 100%); } 100% { opacity: 0; } }
 
         /* ═══ BRIEFING SCREEN ═══ */
-        .briefing-screen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2000;
-            pointer-events: auto;
-            opacity: 1;
-            transition: opacity 0.8s ease;
-            background: #000;
-        }
-        .briefing-screen.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
+        .briefing-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; pointer-events: auto; opacity: 1; transition: opacity 0.8s ease; background: #000; }
+        .briefing-screen.fade-out { opacity: 0; pointer-events: none; }
         .briefing-screen.hidden { display: none; }
+        .briefing-screen.shake { animation: screenShake 0.15s ease-out; }
+        @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-3px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-1px, 1px); } 100% { transform: translate(0, 0); } }
 
-        /* Screen shake on lightning */
-        .briefing-screen.shake {
-            animation: screenShake 0.15s ease-out;
-        }
-        @keyframes screenShake {
-            0% { transform: translate(0, 0); }
-            25% { transform: translate(-3px, 2px); }
-            50% { transform: translate(2px, -2px); }
-            75% { transform: translate(-1px, 1px); }
-            100% { transform: translate(0, 0); }
-        }
+        .briefing-map { position: absolute; top: -2%; left: -2%; width: 104%; height: 104%; background: url('https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_a0a4198ec4ede32f48e38a335c059ced.png') center center / cover no-repeat; filter: saturate(0.35) brightness(0.3) contrast(1.1); animation: briefingBreathe 10s ease-in-out infinite; }
+        @keyframes briefingBreathe { 0%, 100% { transform: scale(1) translate(0, 0); } 33% { transform: scale(1.04) translate(-0.3%, 0.2%); } 66% { transform: scale(1.02) translate(0.2%, -0.3%); } }
 
-        .briefing-map {
-            position: absolute;
-            top: -2%; left: -2%;
-            width: 104%; height: 104%;
-            background: url('https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_a0a4198ec4ede32f48e38a335c059ced.png') center center / cover no-repeat;
-            filter: saturate(0.35) brightness(0.3) contrast(1.1);
-            animation: briefingBreathe 10s ease-in-out infinite;
-        }
-        @keyframes briefingBreathe {
-            0%, 100% { transform: scale(1) translate(0, 0); }
-            33% { transform: scale(1.04) translate(-0.3%, 0.2%); }
-            66% { transform: scale(1.02) translate(0.2%, -0.3%); }
-        }
+        .briefing-vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.75) 60%, rgba(0,5,15,0.97) 100%); }
+        .briefing-frost { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; box-shadow: inset 0 0 80px rgba(74,163,255,0.25), inset 0 0 160px rgba(74,163,255,0.12), inset 0 0 250px rgba(40,100,180,0.08); animation: frostPulse 5s ease-in-out infinite; }
+        @keyframes frostPulse { 0%, 100% { box-shadow: inset 0 0 80px rgba(74,163,255,0.25), inset 0 0 160px rgba(74,163,255,0.12), inset 0 0 250px rgba(40,100,180,0.08); } 50% { box-shadow: inset 0 0 120px rgba(74,163,255,0.4), inset 0 0 200px rgba(74,163,255,0.2), inset 0 0 300px rgba(40,100,180,0.15); } }
+        .frost-corner { position: absolute; width: 300px; height: 300px; pointer-events: none; opacity: 0.6; animation: frostCreep 6s ease-in-out infinite alternate; }
+        .frost-corner.tl { top: -20px; left: -20px; background: radial-gradient(ellipse at 0% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%); }
+        .frost-corner.tr { top: -20px; right: -20px; background: radial-gradient(ellipse at 100% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%); }
+        .frost-corner.bl { bottom: -20px; left: -20px; background: radial-gradient(ellipse at 0% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%); }
+        .frost-corner.br { bottom: -20px; right: -20px; background: radial-gradient(ellipse at 100% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%); }
+        @keyframes frostCreep { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 0.8; transform: scale(1.1); } }
+        .briefing-fog { position: absolute; top: 0; left: 0; width: 200%; height: 100%; pointer-events: none; background: radial-gradient(ellipse at 20% 80%, rgba(74,163,255,0.06) 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, rgba(100,180,255,0.05) 0%, transparent 50%), radial-gradient(ellipse at 40% 60%, rgba(74,163,255,0.04) 0%, transparent 40%); animation: fogDrift 20s linear infinite; }
+        @keyframes fogDrift { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .lightning-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; opacity: 0; }
+        .lightning-flash.strike { animation: lightningStrike 0.3s ease-out forwards; }
+        .lightning-flash.double { animation: lightningDouble 0.6s ease-out forwards; }
+        @keyframes lightningStrike { 0% { opacity: 0; background: radial-gradient(ellipse at 50% 20%, rgba(180,210,255,0.7) 0%, rgba(74,163,255,0.3) 30%, transparent 70%); } 8% { opacity: 1; } 15% { opacity: 0.2; } 20% { opacity: 0.6; } 100% { opacity: 0; } }
+        @keyframes lightningDouble { 0% { opacity: 0; background: radial-gradient(ellipse at 30% 15%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); } 5% { opacity: 1; } 10% { opacity: 0.1; } 15% { opacity: 0.8; background: radial-gradient(ellipse at 65% 10%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); } 22% { opacity: 0.2; } 28% { opacity: 0.5; } 100% { opacity: 0; } }
 
-        /* Dark vignette — heavier, moodier */
-        .briefing-vignette {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.75) 60%, rgba(0,5,15,0.97) 100%);
-        }
-
-        /* Frost overlay — thick ice creeping from edges */
-        .briefing-frost {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            box-shadow:
-                inset 0 0 80px rgba(74,163,255,0.25),
-                inset 0 0 160px rgba(74,163,255,0.12),
-                inset 0 0 250px rgba(40,100,180,0.08);
-            animation: frostPulse 5s ease-in-out infinite;
-        }
-        @keyframes frostPulse {
-            0%, 100% {
-                box-shadow:
-                    inset 0 0 80px rgba(74,163,255,0.25),
-                    inset 0 0 160px rgba(74,163,255,0.12),
-                    inset 0 0 250px rgba(40,100,180,0.08);
-            }
-            50% {
-                box-shadow:
-                    inset 0 0 120px rgba(74,163,255,0.4),
-                    inset 0 0 200px rgba(74,163,255,0.2),
-                    inset 0 0 300px rgba(40,100,180,0.15);
-            }
-        }
-
-        /* Ice corner frost — frozen edges creeping in */
-        .frost-corner {
-            position: absolute;
-            width: 300px; height: 300px;
-            pointer-events: none;
-            opacity: 0.6;
-            animation: frostCreep 6s ease-in-out infinite alternate;
-        }
-        .frost-corner.tl {
-            top: -20px; left: -20px;
-            background: radial-gradient(ellipse at 0% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%);
-        }
-        .frost-corner.tr {
-            top: -20px; right: -20px;
-            background: radial-gradient(ellipse at 100% 0%, rgba(150,200,255,0.2) 0%, rgba(74,163,255,0.08) 40%, transparent 70%);
-        }
-        .frost-corner.bl {
-            bottom: -20px; left: -20px;
-            background: radial-gradient(ellipse at 0% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%);
-        }
-        .frost-corner.br {
-            bottom: -20px; right: -20px;
-            background: radial-gradient(ellipse at 100% 100%, rgba(150,200,255,0.15) 0%, rgba(74,163,255,0.06) 40%, transparent 70%);
-        }
-        @keyframes frostCreep {
-            0% { opacity: 0.4; transform: scale(0.9); }
-            100% { opacity: 0.8; transform: scale(1.1); }
-        }
-
-        /* Fog layer — drifting mist */
-        .briefing-fog {
-            position: absolute;
-            top: 0; left: 0;
-            width: 200%; height: 100%;
-            pointer-events: none;
-            background:
-                radial-gradient(ellipse at 20% 80%, rgba(74,163,255,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 30%, rgba(100,180,255,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 40% 60%, rgba(74,163,255,0.04) 0%, transparent 40%);
-            animation: fogDrift 20s linear infinite;
-        }
-        @keyframes fogDrift {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* Lightning flash overlay */
-        .lightning-flash {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0;
-        }
-        .lightning-flash.strike {
-            animation: lightningStrike 0.3s ease-out forwards;
-        }
-        .lightning-flash.double {
-            animation: lightningDouble 0.6s ease-out forwards;
-        }
-        @keyframes lightningStrike {
-            0% { opacity: 0; background: radial-gradient(ellipse at 50% 20%, rgba(180,210,255,0.7) 0%, rgba(74,163,255,0.3) 30%, transparent 70%); }
-            8% { opacity: 1; }
-            15% { opacity: 0.2; }
-            20% { opacity: 0.6; }
-            100% { opacity: 0; }
-        }
-        @keyframes lightningDouble {
-            0% { opacity: 0; background: radial-gradient(ellipse at 30% 15%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); }
-            5% { opacity: 1; }
-            10% { opacity: 0.1; }
-            15% { opacity: 0.8; background: radial-gradient(ellipse at 65% 10%, rgba(200,220,255,0.8) 0%, rgba(74,163,255,0.4) 25%, transparent 60%); }
-            22% { opacity: 0.2; }
-            28% { opacity: 0.5; }
-            100% { opacity: 0; }
-        }
-
-        /* Lightning bolt SVG overlay */
-        .lightning-bolt {
-            position: absolute;
-            pointer-events: none;
-            z-index: 4;
-            opacity: 0;
-            filter: blur(1px);
-        }
-        .lightning-bolt.visible {
-            animation: boltFlash 0.4s ease-out forwards;
-        }
-        @keyframes boltFlash {
-            0% { opacity: 0; }
-            5% { opacity: 1; filter: blur(0px) drop-shadow(0 0 15px rgba(180,210,255,0.9)); }
-            15% { opacity: 0.3; }
-            20% { opacity: 0.9; filter: blur(1px) drop-shadow(0 0 25px rgba(120,180,255,0.7)); }
-            40% { opacity: 0.1; }
-            100% { opacity: 0; }
-        }
-
-        .briefing-content {
-            position: relative;
-            z-index: 10;
-            width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-        }
-
-        .briefing-title {
-            font-family: 'Bungee', cursive;
-            font-size: 72px;
-            font-weight: 400;
-            letter-spacing: 10px;
-            text-transform: uppercase;
-            color: #7ecfff;
-            text-shadow:
-                0 0 40px rgba(74,163,255,0.7),
-                0 0 80px rgba(74,163,255,0.4),
-                0 0 120px rgba(40,100,200,0.3),
-                0 2px 4px rgba(0,0,0,0.9);
-            opacity: 0;
-            transform: translateY(-30px) scale(0.95);
-            transition: opacity 1.5s ease, transform 1.5s ease;
-            margin-bottom: 8px;
-        }
-        .briefing-title.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        .briefing-subtitle {
-            font-family: 'Permanent Marker', cursive;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            color: rgba(150,200,255,0.6);
-            text-shadow: 0 0 12px rgba(74,163,255,0.4);
-            opacity: 0;
-            transition: opacity 1s ease 0.4s;
-            margin-bottom: 45px;
-        }
+        .briefing-content { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .briefing-title { font-family: 'Bungee', cursive; font-size: 72px; font-weight: 400; letter-spacing: 10px; text-transform: uppercase; color: #7ecfff; text-shadow: 0 0 40px rgba(74,163,255,0.7), 0 0 80px rgba(74,163,255,0.4), 0 0 120px rgba(40,100,200,0.3), 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transform: translateY(-30px) scale(0.95); transition: opacity 1.5s ease, transform 1.5s ease; margin-bottom: 8px; }
+        .briefing-title.visible { opacity: 1; transform: translateY(0) scale(1); }
+        .briefing-subtitle { font-family: 'Permanent Marker', cursive; font-size: 15px; font-weight: 700; letter-spacing: 8px; text-transform: uppercase; color: rgba(150,200,255,0.6); text-shadow: 0 0 12px rgba(74,163,255,0.4); opacity: 0; transition: opacity 1s ease 0.4s; margin-bottom: 45px; }
         .briefing-subtitle.visible { opacity: 1; }
-
-        .briefing-lore {
-            font-family: 'Permanent Marker', cursive;
-            font-size: 21px;
-            font-weight: 400;
-            line-height: 1.9;
-            color: rgba(200, 215, 230, 0.95);
-            text-shadow: 0 0 12px rgba(74,163,255,0.35), 0 0 30px rgba(74,163,255,0.1), 0 1px 3px rgba(0,0,0,0.9);
-            text-align: center;
-            max-width: 720px;
-            min-height: 200px;
-            margin-bottom: 30px;
-        }
-        .briefing-lore .lore-line {
-            display: block;
-            margin-bottom: 14px;
-        }
-        .briefing-lore .lore-rhyme {
-            color: #7ecfff;
-            font-style: italic;
-            font-size: 24px;
-            text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3), 0 1px 3px rgba(0,0,0,0.9);
-            animation: rhymeGlow 3s ease-in-out infinite;
-        }
-        @keyframes rhymeGlow {
-            0%, 100% { text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3); }
-            50% { text-shadow: 0 0 30px rgba(126,207,255,0.8), 0 0 60px rgba(74,163,255,0.5), 0 0 80px rgba(74,163,255,0.2); }
-        }
-
-        .briefing-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1.1em;
-            background: #7ecfff;
-            margin-left: 2px;
-            vertical-align: text-bottom;
-            animation: blink 0.7s step-end infinite;
-            box-shadow: 0 0 8px rgba(126,207,255,0.6);
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* Horizontal rule / divider before missions */
-        .briefing-divider {
-            width: 200px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(74,163,255,0.4), rgba(150,200,255,0.6), rgba(74,163,255,0.4), transparent);
-            margin: 15px auto 25px;
-            opacity: 0;
-            transition: opacity 0.8s ease, width 0.8s ease;
-        }
-        .briefing-divider.visible {
-            opacity: 1;
-            width: 300px;
-        }
-
-        .briefing-missions {
-            display: flex;
-            gap: 24px;
-            opacity: 0;
-            transform: translateY(25px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-            margin-top: 15px;
-        }
-
-        /* Neon logo — between mission cards */
-        .neon-logo {
-            width: 90px; height: 90px;
-            flex-shrink: 0;
-            pointer-events: none;
-            align-self: center;
-        }
-        .neon-logo img {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 12px rgba(62,252,200,0.6));
-            animation: logoPulse 4s ease-in-out infinite;
-        }
-        @keyframes logoPulse {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); }
-            50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); }
-        }
-
-        .briefing-missions.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .mission-card {
-            width: 290px;
-            padding: 28px 22px;
-            background: rgba(5, 10, 20, 0.8);
-            border: 2px solid rgba(62,252,255,0.3);
-            border-radius: 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.35s ease;
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-            pointer-events: auto !important;
-        }
-        /* Shimmer sweep on hover */
-        .mission-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent);
-            transition: left 0.6s ease;
-        }
+        .briefing-lore { font-family: 'Permanent Marker', cursive; font-size: 21px; font-weight: 400; line-height: 1.9; color: rgba(200, 215, 230, 0.95); text-shadow: 0 0 12px rgba(74,163,255,0.35), 0 0 30px rgba(74,163,255,0.1), 0 1px 3px rgba(0,0,0,0.9); text-align: center; max-width: 720px; min-height: 200px; margin-bottom: 30px; }
+        .briefing-lore .lore-line { display: block; margin-bottom: 14px; }
+        .briefing-lore .lore-rhyme { color: #7ecfff; font-style: italic; font-size: 24px; text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3), 0 1px 3px rgba(0,0,0,0.9); animation: rhymeGlow 3s ease-in-out infinite; }
+        @keyframes rhymeGlow { 0%, 100% { text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3); } 50% { text-shadow: 0 0 30px rgba(126,207,255,0.8), 0 0 60px rgba(74,163,255,0.5), 0 0 80px rgba(74,163,255,0.2); } }
+        .briefing-cursor { display: inline-block; width: 2px; height: 1.1em; background: #7ecfff; margin-left: 2px; vertical-align: text-bottom; animation: blink 0.7s step-end infinite; box-shadow: 0 0 8px rgba(126,207,255,0.6); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .briefing-divider { width: 200px; height: 1px; background: linear-gradient(90deg, transparent, rgba(74,163,255,0.4), rgba(150,200,255,0.6), rgba(74,163,255,0.4), transparent); margin: 15px auto 25px; opacity: 0; transition: opacity 0.8s ease, width 0.8s ease; }
+        .briefing-divider.visible { opacity: 1; width: 300px; }
+        .briefing-missions { display: flex; gap: 24px; opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease, transform 0.8s ease; margin-top: 15px; }
+        .briefing-missions.visible { opacity: 1; transform: translateY(0); }
+        .neon-logo { width: 90px; height: 90px; flex-shrink: 0; pointer-events: none; align-self: center; }
+        .neon-logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
+        @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
+        .mission-card { width: 290px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+        .mission-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent); transition: left 0.6s ease; }
         .mission-card:hover::before { left: 100%; }
-        /* Bottom glow bar */
-        .mission-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 20%;
-            width: 60%; height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+        .mission-card::after { content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 2px; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
         .mission-card:hover::after { opacity: 1; }
-        .mission-card:hover {
-            border-color: #3efcff;
-            box-shadow: 0 0 25px rgba(62,252,255,0.5), inset 0 0 25px rgba(62,252,255,0.1), 0 8px 30px rgba(0,0,0,0.4);
-            transform: translateY(-6px);
-        }
-        .mission-card:active { transform: translateY(-3px) scale(0.98); }
-
-        .mission-card.iceborne {
-            border-color: rgba(74,163,255,0.3);
-        }
-        .mission-card.iceborne::after {
-            background: linear-gradient(90deg, transparent, rgba(74,163,255,0.5), transparent);
-        }
-        .mission-card.iceborne:hover {
-            border-color: #4aa3ff;
-            box-shadow: 0 0 30px rgba(74,163,255,0.6), inset 0 0 25px rgba(74,163,255,0.15), 0 0 50px rgba(74,163,255,0.25), 0 8px 30px rgba(0,0,0,0.4);
-        }
-
-        .mission-mode {
-            font-family: 'Bungee', cursive;
-            font-size: 17px;
-            font-weight: 400;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-        .mission-card:not(.iceborne) .mission-mode {
-            color: #3efcff;
-            text-shadow: 0 0 12px #3efcff;
-        }
-        .mission-card.iceborne .mission-mode {
-            color: #4aa3ff;
-            text-shadow: 0 0 12px #4aa3ff, 0 0 25px rgba(74,163,255,0.3);
-        }
-
-        .mission-desc {
-            font-family: 'Permanent Marker', cursive;
-            font-size: 14px;
-            color: rgba(200, 210, 220, 0.7);
-            line-height: 1.5;
-            letter-spacing: 1px;
-        }
-
-        .mission-icon {
-            font-size: 36px;
-            margin-bottom: 12px;
-            filter: drop-shadow(0 0 12px currentColor);
-        }
+        .mission-card:hover { border-color: #3efcff; box-shadow: 0 0 25px rgba(62,252,255,0.5), inset 0 0 25px rgba(62,252,255,0.1), 0 8px 30px rgba(0,0,0,0.4); transform: translateY(-6px); }
+        .mission-card.iceborne { border-color: rgba(74,163,255,0.3); }
+        .mission-card.iceborne::after { background: linear-gradient(90deg, transparent, rgba(74,163,255,0.5), transparent); }
+        .mission-card.iceborne:hover { border-color: #4aa3ff; box-shadow: 0 0 30px rgba(74,163,255,0.6), inset 0 0 25px rgba(74,163,255,0.15), 0 0 50px rgba(74,163,255,0.25), 0 8px 30px rgba(0,0,0,0.4); }
+        .mission-mode { font-family: 'Bungee', cursive; font-size: 17px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+        .mission-card:not(.iceborne) .mission-mode { color: #3efcff; text-shadow: 0 0 12px #3efcff; }
+        .mission-card.iceborne .mission-mode { color: #4aa3ff; text-shadow: 0 0 12px #4aa3ff, 0 0 25px rgba(74,163,255,0.3); }
+        .mission-desc { font-family: 'Permanent Marker', cursive; font-size: 14px; color: rgba(200, 210, 220, 0.7); line-height: 1.5; letter-spacing: 1px; }
+        .mission-icon { font-size: 36px; margin-bottom: 12px; filter: drop-shadow(0 0 12px currentColor); }
         .mission-card:not(.iceborne) .mission-icon { color: #3efcff; }
         .mission-card.iceborne .mission-icon { color: #4aa3ff; }
+        .briefing-skip { position: absolute; bottom: 24px; right: 30px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(62,252,255,0.3); cursor: pointer; transition: color 0.2s, text-shadow 0.2s; z-index: 20; }
+        .briefing-skip:hover { color: rgba(62,252,255,0.7); text-shadow: 0 0 10px rgba(62,252,255,0.4); }
+        .snowflakes { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 3; }
+        .snowflake { position: absolute; top: -5%; color: rgba(180, 210, 255, 0.5); animation: snowfall linear infinite; }
+        .snowflake.large { color: rgba(200, 225, 255, 0.3); filter: blur(1px); }
+        .snowflake.bright { color: rgba(180, 220, 255, 0.8); text-shadow: 0 0 6px rgba(130,190,255,0.6); }
+        @keyframes snowfall { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; } 5% { opacity: 0.6; } 85% { opacity: 0.3; } 100% { transform: translateY(110vh) translateX(30px) rotate(360deg); opacity: 0; } }
+        .snowflake.gust { animation: snowGust linear infinite; }
+        @keyframes snowGust { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; } 5% { opacity: 0.5; } 30% { transform: translateY(33vh) translateX(60px) rotate(120deg); } 60% { transform: translateY(66vh) translateX(-20px) rotate(240deg); } 100% { transform: translateY(110vh) translateX(40px) rotate(400deg); opacity: 0; } }
 
-        .briefing-skip {
-            position: absolute;
-            bottom: 24px; right: 30px;
-            font-family: 'Rubik Spray Paint', cursive;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: rgba(62,252,255,0.3);
-            cursor: pointer;
-            transition: color 0.2s, text-shadow 0.2s;
-            z-index: 20;
-            pointer-events: auto !important;
-        }
-        .briefing-skip:hover {
-            color: rgba(62,252,255,0.7);
-            text-shadow: 0 0 10px rgba(62,252,255,0.4);
-        }
+        /* Audio unlock overlay */
+        .audio-unlock { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; pointer-events: auto; cursor: pointer; }
 
-        /* Snowflake / ice particles */
-        .snowflakes {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 3;
-        }
-        .snowflake {
-            position: absolute;
-            top: -5%;
-            color: rgba(180, 210, 255, 0.5);
-            animation: snowfall linear infinite;
-        }
-        .snowflake.large {
-            color: rgba(200, 225, 255, 0.3);
-            filter: blur(1px);
-        }
-        .snowflake.bright {
-            color: rgba(180, 220, 255, 0.8);
-            text-shadow: 0 0 6px rgba(130,190,255,0.6);
-        }
-        @keyframes snowfall {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-            5% { opacity: 0.6; }
-            85% { opacity: 0.3; }
-            100% { transform: translateY(110vh) translateX(30px) rotate(360deg); opacity: 0; }
-        }
-        /* Wind gust variation */
-        .snowflake.gust {
-            animation: snowGust linear infinite;
-        }
-        @keyframes snowGust {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-            5% { opacity: 0.5; }
-            30% { transform: translateY(33vh) translateX(60px) rotate(120deg); }
-            60% { transform: translateY(66vh) translateX(-20px) rotate(240deg); }
-            100% { transform: translateY(110vh) translateX(40px) rotate(400deg); opacity: 0; }
-        }
-
-        /* ═══ Responsive ═══ */
         @media (max-width: 768px) {
-            .vitals { width: 200px; }
-            .weapon-panel { width: 180px; }
-            .score-panel { width: 170px; }
-            .hud-toggle { width: 36px; height: 36px; }
-            .overlay-title { font-size: 36px; }
-            .timer-display { font-size: 28px; }
-            .score-value { font-size: 24px; }
-            .ammo-display { font-size: 22px; }
-            .minimap { width: 120px; height: 120px; bottom: 170px; }
+            .vitals { width: 200px; } .weapon-panel { width: 180px; } .score-panel { width: 170px; }
+            .hud-toggle { width: 36px; height: 36px; } .overlay-title { font-size: 36px; }
+            .timer-display { font-size: 28px; } .score-value { font-size: 24px; } .ammo-display { font-size: 22px; }
+            .minimap { width: 120px; height: 120px; bottom: 170px; } .minimap canvas { width: 120px; height: 120px; }
             .briefing-title { font-size: 36px; letter-spacing: 6px; }
             .briefing-lore { font-size: 16px; max-width: 90%; }
             .briefing-missions { flex-direction: column; gap: 16px; }
@@ -977,6 +212,10 @@
 </head>
 <body>
     <audio id="bgDrums" loop preload="auto" src="tribal_drums.mp3"></audio>
+
+    <!-- Invisible overlay to unlock audio on first click (Bus's suggestion) -->
+    <div class="audio-unlock" id="audioUnlock"></div>
+
     <div class="hud-container">
         <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
         <div class="briefing-screen" id="briefingScreen">
@@ -1014,795 +253,203 @@
             <div class="briefing-skip" id="briefingSkip" onclick="skipBriefing()">SKIP &gt;&gt;</div>
         </div>
 
-        <!-- HUD Toggle Button (always visible, has pointer-events) -->
+        <!-- HUD Toggle -->
         <div class="hud-toggle" id="hudToggle" onclick="toggleHud()">
-            <svg class="eye-open" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-            </svg>
-            <svg class="eye-closed" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.8 11.8 0 001 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-            </svg>
+            <svg class="eye-open" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            <svg class="eye-closed" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.8 11.8 0 001 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
         </div>
 
-        <!-- All toggleable HUD elements -->
+        <!-- Gameplay HUD -->
         <div class="hud-elements" id="hudElements">
-            <!-- Damage Flash -->
             <div class="damage-flash" id="damageFlash"></div>
-
-            <!-- Bottom-Left: VITALS -->
             <div class="vitals panel">
                 <div class="health-container">
                     <div class="label">HP</div>
-                    <div class="bar-wrapper">
-                        <div class="bar health-bar" id="healthBar" style="width:100%"></div>
-                        <div class="bar-text" id="healthText">100</div>
-                    </div>
+                    <div class="bar-wrapper"><div class="bar health-bar" id="healthBar" style="width:100%"></div><div class="bar-text" id="healthText">100</div></div>
                 </div>
                 <div class="armor-container">
                     <div class="label">ARMOR</div>
-                    <div class="bar-wrapper">
-                        <div class="bar armor-bar" id="armorBar" style="width:0%"></div>
-                        <div class="bar-text" id="armorText">0</div>
-                    </div>
+                    <div class="bar-wrapper"><div class="bar armor-bar" id="armorBar" style="width:0%"></div><div class="bar-text" id="armorText">0</div></div>
                 </div>
             </div>
-
-            <!-- Boost -->
             <div class="boost-indicator" id="boostIndicator">SPEED BOOST</div>
-
-            <!-- Bottom-Left: MINIMAP (above vitals) -->
             <div class="minimap" id="minimapContainer">
                 <canvas id="minimapCanvas" width="160" height="160"></canvas>
                 <div class="minimap-arrow"></div>
-                <div class="minimap-label">RADAR</div>
+                <div class="minimap-label">MAP</div>
+                <div class="minimap-debug" id="mmDebug">waiting for data...</div>
             </div>
-
-            <!-- Bottom-Right: WEAPON -->
             <div class="weapon-panel panel">
-                <div class="weapon-icon" id="weaponIcon">
-                    <svg class="weapon-svg" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="35" y="25" width="50" height="10" rx="2"/>
-                        <circle cx="32" cy="30" r="8"/>
-                    </svg>
-                </div>
+                <div class="weapon-icon" id="weaponIcon"><svg class="weapon-svg" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg"><rect x="35" y="25" width="50" height="10" rx="2"/><circle cx="32" cy="30" r="8"/></svg></div>
                 <div class="weapon-name" id="weaponName">UNARMED</div>
                 <div class="ammo-display" id="ammoDisplay">-- / --</div>
             </div>
-
-            <!-- Top-Left: SCORE -->
             <div class="score-panel panel">
                 <div class="score-row">
-                    <div class="score-item">
-                        <div class="score-label">KILLS</div>
-                        <div class="score-value" id="killsValue">0</div>
-                    </div>
-                    <div class="score-item">
-                        <div class="score-label">DEATHS</div>
-                        <div class="score-value" id="deathsValue">0</div>
-                    </div>
+                    <div class="score-item"><div class="score-label">KILLS</div><div class="score-value" id="killsValue">0</div></div>
+                    <div class="score-item"><div class="score-label">DEATHS</div><div class="score-value" id="deathsValue">0</div></div>
                 </div>
                 <div class="kd-ratio" id="kdRatio">K/D: 0.00</div>
                 <div class="streak-badge" id="streakBadge"></div>
             </div>
-
-            <!-- Top-Center: TIMER (hidden by default) -->
-            <div class="timer-panel panel" id="timerPanel">
-                <div class="timer-display" id="timerDisplay">5:00</div>
-            </div>
-
-            <!-- Crosshair -->
-            <div class="crosshair" id="crosshair">
-                <div class="xh-line xh-top"></div>
-                <div class="xh-line xh-bot"></div>
-                <div class="xh-line xh-lft"></div>
-                <div class="xh-line xh-rgt"></div>
-                <div class="xh-dot"></div>
-            </div>
-
-            <!-- Kill Feed -->
+            <div class="timer-panel panel" id="timerPanel"><div class="timer-display" id="timerDisplay">5:00</div></div>
+            <div class="crosshair" id="crosshair"><div class="xh-line xh-top"></div><div class="xh-line xh-bot"></div><div class="xh-line xh-lft"></div><div class="xh-line xh-rgt"></div><div class="xh-dot"></div></div>
             <div class="kill-feed" id="killFeed"></div>
-
-            <!-- Pickup Flash -->
             <div class="pickup-flash" id="pickupFlash"></div>
-
-            <!-- Streak Announce -->
-            <div class="streak-announce" id="streakAnnounce">
-                <div class="streak-text" id="streakText"></div>
-            </div>
-
-            <!-- Game Overlay -->
-            <div class="game-overlay" id="gameOverlay">
-                <div class="overlay-title" id="overlayTitle"></div>
-                <div class="overlay-subtitle" id="overlaySubtitle"></div>
-            </div>
+            <div class="streak-announce" id="streakAnnounce"><div class="streak-text" id="streakText"></div></div>
+            <div class="game-overlay" id="gameOverlay"><div class="overlay-title" id="overlayTitle"></div><div class="overlay-subtitle" id="overlaySubtitle"></div></div>
         </div>
     </div>
 
     <script>
-        // ══ STATE ══
-        const S = {
-            hp: 100, armor: 0,
-            kills: 0, deaths: 0, streak: 0,
-            weapon: 'none',
-            clip: 0, reserve: 0,
-            timerActive: false, timerSec: 0
-        };
+        var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
+        var $ = function(id) { return document.getElementById(id); };
+        var healthBar = $('healthBar'), healthText = $('healthText');
+        var armorBar = $('armorBar'), armorText = $('armorText');
+        var killsVal = $('killsValue'), deathsVal = $('deathsValue');
+        var kdRatio = $('kdRatio'), streakBadge = $('streakBadge');
+        var weaponIcon = $('weaponIcon'), weaponName = $('weaponName');
+        var ammoDisp = $('ammoDisplay');
+        var timerPanel = $('timerPanel'), timerDisp = $('timerDisplay');
+        var crosshair = $('crosshair'), killFeed = $('killFeed');
+        var pickupFlash = $('pickupFlash');
+        var streakAnnounce = $('streakAnnounce'), streakText = $('streakText');
+        var gameOverlay = $('gameOverlay'), overlayTitle = $('overlayTitle'), overlaySub = $('overlaySubtitle');
+        var dmgFlash = $('damageFlash'), boostInd = $('boostIndicator');
 
-        // ══ DOM ══
-        const $ = id => document.getElementById(id);
-        const healthBar = $('healthBar'), healthText = $('healthText');
-        const armorBar = $('armorBar'), armorText = $('armorText');
-        const killsVal = $('killsValue'), deathsVal = $('deathsValue');
-        const kdRatio = $('kdRatio'), streakBadge = $('streakBadge');
-        const weaponIcon = $('weaponIcon'), weaponName = $('weaponName');
-        const ammoDisp = $('ammoDisplay');
-        const timerPanel = $('timerPanel'), timerDisp = $('timerDisplay');
-        const crosshair = $('crosshair');
-        const killFeed = $('killFeed');
-        const pickupFlash = $('pickupFlash');
-        const streakAnnounce = $('streakAnnounce'), streakText = $('streakText');
-        const gameOverlay = $('gameOverlay'), overlayTitle = $('overlayTitle'), overlaySub = $('overlaySubtitle');
-        const dmgFlash = $('damageFlash');
-        const boostInd = $('boostIndicator');
-
-        // ══ WEAPON IMAGES (inline SVGs) ══
-        const WEAPON_IMG = {
+        var WEAPON_SVG = {
             none: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="35" y="25" width="50" height="10" rx="2"/><circle cx="32" cy="30" r="8"/></svg>',
-            pistol: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="20" y="22" width="45" height="12" rx="2"/><rect x="60" y="20" width="12" height="16" rx="1"/><rect x="42" y="34" width="12" height="20" rx="2"/><rect x="16" y="25" width="8" height="6" rx="3"/><rect x="48" y="38" width="18" height="4" rx="1" transform="rotate(15 57 40)"/></svg>',
-            rifle: '<svg class="weapon-svg" viewBox="0 0 140 50"><rect x="5" y="20" width="90" height="10" rx="1"/><rect x="90" y="16" width="16" height="18" rx="2"/><rect x="70" y="30" width="12" height="16" rx="2"/><rect x="100" y="18" width="30" height="6" rx="1"/><rect x="100" y="28" width="25" height="6" rx="1"/><rect x="40" y="12" width="20" height="6" rx="3"/><rect x="1" y="22" width="8" height="6" rx="3"/><rect x="76" y="34" width="16" height="4" rx="1" transform="rotate(12 84 36)"/></svg>',
-            shotgun: '<svg class="weapon-svg" viewBox="0 0 140 50"><rect x="5" y="19" width="80" height="12" rx="1"/><rect x="5" y="17" width="75" height="4" rx="1"/><rect x="80" y="15" width="18" height="20" rx="2"/><rect x="60" y="31" width="14" height="14" rx="2"/><rect x="92" y="17" width="35" height="8" rx="1"/><rect x="92" y="27" width="28" height="6" rx="1"/><rect x="1" y="21" width="8" height="8" rx="3"/><rect x="30" y="31" width="16" height="6" rx="1"/></svg>'
+            pistol: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="40" y="22" width="35" height="16" rx="2"/><rect x="30" y="28" width="15" height="4"/><rect x="75" y="26" width="8" height="8" rx="1"/><circle cx="38" cy="30" r="4"/></svg>',
+            rifle: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="25" y="26" width="70" height="8" rx="2"/><rect x="35" y="20" width="15" height="20" rx="2"/><rect x="15" y="28" width="12" height="4"/><circle cx="93" cy="30" r="5"/></svg>',
+            shotgun: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="25" y="24" width="65" height="12" rx="2"/><rect x="35" y="18" width="18" height="24" rx="2"/><rect x="15" y="28" width="12" height="4"/><rect x="88" y="27" width="10" height="6" rx="1"/></svg>'
         };
+        var STREAKS = [[15,'GODLIKE'],[10,'UNSTOPPABLE'],[7,'RAMPAGE'],[5,'KILLING SPREE'],[3,'TRIPLE KILL']];
 
-        // ══ STREAKS ══
-        const STREAKS = [[15,'GODLIKE'],[10,'UNSTOPPABLE'],[7,'RAMPAGE'],[5,'KILLING SPREE'],[3,'TRIPLE KILL']];
+        function updateHealth(val) { var old = S.hp; S.hp = Math.max(0, Math.min(100, val)); healthBar.style.width = S.hp + '%'; healthText.textContent = Math.round(S.hp); if (S.hp < old) { var d = old - S.hp; dmgFlash.className = 'damage-flash'; void dmgFlash.offsetWidth; dmgFlash.classList.add(d >= 50 ? 'critical' : 'active'); setTimeout(function() { dmgFlash.className = 'damage-flash'; }, 500); } healthBar.classList.toggle('pulse-red', S.hp > 0 && S.hp < 25); }
+        function updateArmor(val) { S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); }
+        function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_SVG[S.weapon] || WEAPON_SVG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
+        function updateAmmo(clip, reserve) { S.clip = Math.max(0, clip); S.reserve = Math.max(0, reserve); if (S.weapon === 'none') return; ammoDisp.textContent = S.clip + ' / ' + S.reserve; ammoDisp.className = 'ammo-display'; if (S.clip === 0) ammoDisp.classList.add('ammo-empty'); else if (S.clip <= 3) ammoDisp.classList.add('ammo-low'); }
+        function updateScore() { killsVal.textContent = S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
+        function updateStreak() { var label = ''; for (var i = 0; i < STREAKS.length; i++) { if (S.streak >= STREAKS[i][0]) { label = STREAKS[i][1]; break; } } if (label) { streakBadge.textContent = label; streakBadge.classList.add('active'); } else { streakBadge.classList.remove('active'); } }
+        function checkStreakMilestone() { for (var i = 0; i < STREAKS.length; i++) { if (S.streak === STREAKS[i][0]) { streakText.textContent = STREAKS[i][1]; streakAnnounce.classList.remove('active'); void streakAnnounce.offsetWidth; streakAnnounce.classList.add('active'); setTimeout(function() { streakAnnounce.classList.remove('active'); }, 2500); break; } } }
+        function updateTimer(sec) { S.timerSec = Math.max(0, sec); if (!S.timerActive) { S.timerActive = true; timerPanel.classList.add('active'); } var m = Math.floor(S.timerSec / 60); var s = S.timerSec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.toggle('timer-warning', S.timerSec < 30 && S.timerSec > 0); }
+        setInterval(function() { if (S.timerActive && S.timerSec > 0) updateTimer(S.timerSec - 1); }, 1000);
+        function addKillFeed() { var msg = document.createElement('div'); msg.className = 'kf-msg'; msg.textContent = 'KILL CONFIRMED'; killFeed.appendChild(msg); setTimeout(function() { if (msg.parentNode) msg.remove(); }, 2500); while (killFeed.children.length > 3) killFeed.removeChild(killFeed.firstChild); }
+        function flashHit() { crosshair.classList.add('hit'); setTimeout(function() { crosshair.classList.remove('hit'); }, 180); }
+        function showPickup(text, color) { pickupFlash.textContent = text; pickupFlash.style.color = color || '#3efcff'; pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff'); pickupFlash.classList.remove('active'); void pickupFlash.offsetWidth; pickupFlash.classList.add('active'); setTimeout(function() { pickupFlash.classList.remove('active'); }, 2000); }
+        function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
+        function setBoost(on) { if (on) boostInd.classList.add('active'); else boostInd.classList.remove('active'); }
 
-        // ══ HEALTH ══
-        function updateHealth(val) {
-            const oldHp = S.hp;
-            S.hp = Math.max(0, Math.min(100, val));
-            healthBar.style.width = S.hp + '%';
-            healthText.textContent = Math.round(S.hp);
-
-            if (S.hp < oldHp) {
-                const diff = oldHp - S.hp;
-                dmgFlash.className = 'damage-flash';
-                void dmgFlash.offsetWidth;
-                dmgFlash.classList.add(diff >= 50 ? 'critical' : 'active');
-                setTimeout(() => { dmgFlash.className = 'damage-flash'; }, 500);
-            }
-
-            healthBar.classList.toggle('pulse-red', S.hp > 0 && S.hp < 25);
-        }
-
-        // ══ ARMOR ══
-        function updateArmor(val) {
-            S.armor = Math.max(0, Math.min(200, val));
-            armorBar.style.width = (S.armor / 200 * 100) + '%';
-            armorText.textContent = Math.round(S.armor);
-            armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50);
-        }
-
-        // ══ WEAPON ══
-        function updateWeapon(type) {
-            S.weapon = type.toLowerCase();
-            weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase();
-            weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none;
-            if (S.weapon === 'none') {
-                ammoDisp.textContent = '-- / --';
-                ammoDisp.className = 'ammo-display';
-            }
-        }
-
-        // ══ AMMO ══
-        function updateAmmo(clip, reserve) {
-            S.clip = Math.max(0, clip);
-            S.reserve = Math.max(0, reserve);
-            if (S.weapon === 'none') return;
-            ammoDisp.textContent = S.clip + ' / ' + S.reserve;
-            ammoDisp.className = 'ammo-display';
-            if (S.clip === 0) ammoDisp.classList.add('ammo-empty');
-            else if (S.clip <= 3) ammoDisp.classList.add('ammo-low');
-        }
-
-        // ══ SCORE ══
-        function updateScore() {
-            killsVal.textContent = S.kills;
-            deathsVal.textContent = S.deaths;
-            const kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths);
-            kdRatio.textContent = 'K/D: ' + kd.toFixed(2);
-        }
-
-        // ══ STREAK ══
-        function updateStreak() {
-            let label = '';
-            for (const [t, n] of STREAKS) { if (S.streak >= t) { label = n; break; } }
-            if (label) {
-                streakBadge.textContent = label;
-                streakBadge.classList.add('active');
-            } else {
-                streakBadge.classList.remove('active');
-            }
-        }
-
-        function checkStreakMilestone() {
-            for (const [t, n] of STREAKS) {
-                if (S.streak === t) {
-                    streakText.textContent = n;
-                    streakAnnounce.classList.remove('active');
-                    void streakAnnounce.offsetWidth;
-                    streakAnnounce.classList.add('active');
-                    setTimeout(() => streakAnnounce.classList.remove('active'), 2500);
-                    break;
-                }
-            }
-        }
-
-        // ══ TIMER ══
-        function updateTimer(sec) {
-            S.timerSec = Math.max(0, sec);
-            if (!S.timerActive) { S.timerActive = true; timerPanel.classList.add('active'); }
-            const m = Math.floor(S.timerSec / 60);
-            const s = S.timerSec % 60;
-            timerDisp.textContent = m + ':' + String(s).padStart(2, '0');
-            timerDisp.classList.toggle('timer-warning', S.timerSec < 30 && S.timerSec > 0);
-        }
-
-        // Auto-countdown
-        setInterval(() => {
-            if (S.timerActive && S.timerSec > 0) updateTimer(S.timerSec - 1);
-        }, 1000);
-
-        // ══ KILL FEED ══
-        function addKillFeed() {
-            const msg = document.createElement('div');
-            msg.className = 'kf-msg';
-            msg.textContent = 'KILL CONFIRMED';
-            killFeed.appendChild(msg);
-            setTimeout(() => { if (msg.parentNode) msg.remove(); }, 2500);
-            while (killFeed.children.length > 3) killFeed.removeChild(killFeed.firstChild);
-        }
-
-        // ══ HIT MARKER ══
-        function flashHit() {
-            crosshair.classList.add('hit');
-            setTimeout(() => crosshair.classList.remove('hit'), 180);
-        }
-
-        // ══ PICKUP FLASH ══
-        function showPickup(text, color) {
-            pickupFlash.textContent = text;
-            pickupFlash.style.color = color || '#3efcff';
-            pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff');
-            pickupFlash.classList.remove('active');
-            void pickupFlash.offsetWidth;
-            pickupFlash.classList.add('active');
-            setTimeout(() => pickupFlash.classList.remove('active'), 2000);
-        }
-
-        // ══ GAME OVERLAY ══
-        function showOverlay(title, sub, color, dur) {
-            overlayTitle.textContent = title;
-            overlayTitle.style.color = color || '#3efcff';
-            overlaySub.textContent = sub || '';
-            gameOverlay.classList.add('active');
-            setTimeout(() => gameOverlay.classList.remove('active'), dur || 3000);
-        }
-
-        // ══ BOOST ══
-        function setBoost(on) {
-            if (on) boostInd.classList.add('active');
-            else boostInd.classList.remove('active');
-        }
-
-        // ═══════════════════════════════════════════════════════
-        // ══ MINIMAP (radar-style, no background image)       ══
-        // ══ Player always at center, others as relative dots ══
-        // ═══════════════════════════════════════════════════════
-        const MM = {
-            size: 160,
-            radius: 80,
-            range: 120  // world units from center to edge
-        };
-
-        const mmCanvas = $('minimapCanvas');
-        const mmCtx = mmCanvas.getContext('2d');
-
-        let mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
-        let mmAllPos = {}, mmAllRot = {};
-        let mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
-
+        // ══ MINIMAP ══
+        var MM = { mapUrl: 'https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-02-26_30af5521c286f605087bc350e85c6634.png', xMin: -490.99, xMax: 180.46, zMin: -364.42, zMax: 92.07, imgW: 607, imgH: 608, size: 160, radius: 80, zoom: 3.0 };
+        var mmCanvas = $('minimapCanvas'), mmCtx = mmCanvas.getContext('2d');
+        var mmImg = new Image(); mmImg.crossOrigin = 'anonymous'; mmImg.src = MM.mapUrl;
+        var mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
+        var mmAllPos = {}, mmAllRot = {};
+        var mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
+        function mmW2I(wx, wz) { return { x: (wx - MM.xMin) / (MM.xMax - MM.xMin) * MM.imgW, y: (MM.zMax - wz) / (MM.zMax - MM.zMin) * MM.imgH }; }
         function mmLerp(a, b, t) { return a + (b - a) * t; }
-        function mmLerpA(a, b, t) {
-            var d = b - a;
-            while (d > 180) d -= 360;
-            while (d < -180) d += 360;
-            return a + d * t;
-        }
-
-        function mmParsePos(msg) {
-            var m = msg.match(/"([^"]+)"pos:\{(.+)\}/);
-            if (!m) return false;
-            if (!mmMyName) mmMyName = m[1];
-            var re = /"([^"]+)"\s*=\s*"\(([^)]+)\)"/g;
-            var mt;
-            while ((mt = re.exec(m[2])) !== null) {
-                var c = mt[2].split(',');
-                var wx = parseFloat(c[0]) || 0;
-                var wz = parseFloat(c[2]) || 0;
-                mmAllPos[mt[1]] = { x: wx, z: wz };
-                if (mt[1] === mmMyName) { mmPX = wx; mmPZ = wz; }
-            }
-            return true;
-        }
-
-        function mmParseRot(msg) {
-            var m = msg.match(/"([^"]+)"rot:\{(.+)\}/);
-            if (!m) return false;
-            var re = /"([^"]+)"\s*=\s*"([^"]+)"/g;
-            var mt;
-            while ((mt = re.exec(m[2])) !== null) {
-                mmAllRot[mt[1]] = parseFloat(mt[2]) || 0;
-                if (mt[1] === mmMyName) mmRot = mmAllRot[mt[1]];
-            }
-            return true;
-        }
-
+        function mmLerpA(a, b, t) { var d = b - a; while (d > 180) d -= 360; while (d < -180) d += 360; return a + d * t; }
+        function mmParsePos(msg) { var m = msg.match(/"([^"]+)"pos:\{(.+)\}/); if (!m) return false; if (!mmMyName) mmMyName = m[1]; var re = /"([^"]+)"\s*=\s*"\(([^)]+)\)"/g; var mt; while ((mt = re.exec(m[2])) !== null) { var c = mt[2].split(','); mmAllPos[mt[1]] = { x: parseFloat(c[0]) || 0, z: parseFloat(c[2]) || 0 }; if (mt[1] === mmMyName) { mmPX = mmAllPos[mt[1]].x; mmPZ = mmAllPos[mt[1]].z; } } return true; }
+        function mmParseRot(msg) { var m = msg.match(/"([^"]+)"rot:\{(.+)\}/); if (!m) return false; var re = /"([^"]+)"\s*=\s*"([^"]+)"/g; var mt; while ((mt = re.exec(m[2])) !== null) { mmAllRot[mt[1]] = parseFloat(mt[2]) || 0; if (mt[1] === mmMyName) mmRot = mmAllRot[mt[1]]; } return true; }
         var mmLast = 0;
-        function mmDraw(now) {
-            requestAnimationFrame(mmDraw);
-            if (!mmReady) return;
-
-            var dt = mmLast ? (now - mmLast) / 1000 : 0.016;
-            mmLast = now;
-            var t = 1 - Math.pow(0.85, dt * 60);
-
-            mmDX = mmLerp(mmDX, mmPX, t);
-            mmDZ = mmLerp(mmDZ, mmPZ, t);
-            mmDR = mmLerpA(mmDR, mmRot, t);
-            mmDR = ((mmDR % 360) + 360) % 360;
-
-            var r = MM.radius;
-            var a = mmDR * Math.PI / 180; // player heading in radians
-            var scale = r / MM.range;     // pixels per world unit
-
-            mmCtx.clearRect(0, 0, MM.size, MM.size);
-            mmCtx.save();
-
-            // Clip to circle
-            mmCtx.beginPath();
-            mmCtx.arc(r, r, r, 0, Math.PI * 2);
-            mmCtx.clip();
-
-            // Dark background
-            mmCtx.fillStyle = 'rgba(12, 16, 20, 0.9)';
-            mmCtx.fillRect(0, 0, MM.size, MM.size);
-
-            // ── Grid rings (distance indicators) ──
-            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.12)';
-            mmCtx.lineWidth = 1;
-            for (var ring = 1; ring <= 3; ring++) {
-                var rr = (ring / 3) * r;
-                mmCtx.beginPath();
-                mmCtx.arc(r, r, rr, 0, Math.PI * 2);
-                mmCtx.stroke();
-            }
-
-            // ── Cross lines (N-S, E-W axes) ──
-            mmCtx.save();
-            mmCtx.translate(r, r);
-            mmCtx.rotate(-a); // rotate grid with player heading so N stays up relative to player
-            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.08)';
-            mmCtx.beginPath();
-            mmCtx.moveTo(0, -r); mmCtx.lineTo(0, r); // N-S line
-            mmCtx.moveTo(-r, 0); mmCtx.lineTo(r, 0); // E-W line
-            mmCtx.stroke();
-
-            // ── Cardinal direction labels ──
-            mmCtx.fillStyle = 'rgba(62, 252, 255, 0.5)';
-            mmCtx.font = '9px Orbitron';
-            mmCtx.textAlign = 'center';
-            mmCtx.textBaseline = 'middle';
-            var cardR = r - 10;
-            // N at top
-            mmCtx.fillStyle = '#ff6b6b'; // N is red to stand out
-            mmCtx.fillText('N', 0, -cardR);
-            mmCtx.fillStyle = 'rgba(62, 252, 255, 0.45)';
-            mmCtx.fillText('S', 0, cardR);
-            mmCtx.fillText('E', cardR, 0);
-            mmCtx.fillText('W', -cardR, 0);
-            mmCtx.restore();
-
-            // ── Other players as red dots ──
-            mmCtx.save();
-            mmCtx.translate(r, r);
-            for (var name in mmAllPos) {
-                if (name === mmMyName) continue;
-                // World-space delta from me to other player
-                var wx = mmAllPos[name].x - mmDX;
-                var wz = mmAllPos[name].z - mmDZ;
-
-                // Rotate by player heading so forward = up on radar
-                // Portals: X = right, Z = forward. Heading 0 = +Z
-                var cosA = Math.cos(-a);
-                var sinA = Math.sin(-a);
-                var rx = wx * cosA - wz * sinA;
-                var ry = -(wx * sinA + wz * cosA); // negate Y so forward = up
-
-                // Scale to pixel space
-                var px = rx * scale;
-                var py = ry * scale;
-
-                // Distance check (skip if outside radar circle)
-                var dist = Math.sqrt(px * px + py * py);
-                if (dist > r - 6) continue;
-
-                // Draw red dot with glow
-                mmCtx.fillStyle = '#ff6b6b';
-                mmCtx.shadowColor = '#ff6b6b';
-                mmCtx.shadowBlur = 6;
-                mmCtx.beginPath();
-                mmCtx.arc(px, py, 3.5, 0, Math.PI * 2);
-                mmCtx.fill();
-
-                // Draw rotation indicator (small line showing their facing direction)
-                if (mmAllRot[name] !== undefined) {
-                    var eRad = mmAllRot[name] * Math.PI / 180;
-                    var eA = eRad - a; // relative to our heading
-                    mmCtx.strokeStyle = '#ff6b6b';
-                    mmCtx.lineWidth = 1.5;
-                    mmCtx.shadowBlur = 0;
-                    mmCtx.beginPath();
-                    mmCtx.moveTo(px, py);
-                    mmCtx.lineTo(px + Math.sin(eA) * 6, py - Math.cos(eA) * 6);
-                    mmCtx.stroke();
-                }
-            }
-            mmCtx.shadowBlur = 0;
-            mmCtx.restore();
-
-            // ── Outer ring border glow ──
-            mmCtx.strokeStyle = 'rgba(62, 252, 255, 0.25)';
-            mmCtx.lineWidth = 1.5;
-            mmCtx.beginPath();
-            mmCtx.arc(r, r, r - 1, 0, Math.PI * 2);
-            mmCtx.stroke();
-
-            mmCtx.restore();
-        }
+        function mmDraw(now) { requestAnimationFrame(mmDraw); if (!mmReady || !mmImg.complete) return; var dt = mmLast ? (now - mmLast) / 1000 : 0.016; mmLast = now; var t = 1 - Math.pow(0.85, dt * 60); mmDX = mmLerp(mmDX, mmPX, t); mmDZ = mmLerp(mmDZ, mmPZ, t); mmDR = mmLerpA(mmDR, mmRot, t); mmDR = ((mmDR % 360) + 360) % 360; var r = MM.radius; var si = mmW2I(mmDX, mmDZ); var a = -mmDR * Math.PI / 180; var z = MM.zoom; mmCtx.clearRect(0, 0, MM.size, MM.size); mmCtx.save(); mmCtx.beginPath(); mmCtx.arc(r, r, r, 0, Math.PI * 2); mmCtx.clip(); mmCtx.fillStyle = 'rgba(20, 25, 30, 0.85)'; mmCtx.fillRect(0, 0, MM.size, MM.size); mmCtx.translate(r, r); mmCtx.rotate(a); mmCtx.scale(z, z); mmCtx.drawImage(mmImg, -si.x, -si.y); for (var n in mmAllPos) { if (n === mmMyName) continue; var oImg = mmW2I(mmAllPos[n].x, mmAllPos[n].z); var dx = oImg.x - si.x; var dy = oImg.y - si.y; var dist = Math.sqrt(dx * dx + dy * dy) * z; if (dist < r - 4) { mmCtx.fillStyle = '#ff6b6b'; mmCtx.beginPath(); mmCtx.arc(dx, dy, 2.5 / z, 0, Math.PI * 2); mmCtx.fill(); } } mmCtx.restore(); $('mmDebug').textContent = 'X:' + mmDX.toFixed(0) + ' Z:' + mmDZ.toFixed(0) + ' R:' + mmDR.toFixed(0); mmCtx.save(); mmCtx.fillStyle = 'rgba(62,252,255,0.5)'; mmCtx.font = '9px Orbitron'; mmCtx.textAlign = 'center'; mmCtx.fillText('N', r + Math.sin(-a) * (r - 10), r - Math.cos(-a) * (r - 10) + 3); mmCtx.restore(); }
         requestAnimationFrame(mmDraw);
 
         // ══ MESSAGE HANDLER ══
         function handleMsg(msg) {
             if (typeof msg !== 'string') return;
-
-            // Minimap position/rotation data from heartbeat
-            if (msg.indexOf('pos:{') !== -1) {
-                if (mmParsePos(msg) && !mmReady) {
-                    mmReady = true;
-                    mmDX = mmPX; mmDZ = mmPZ; mmDR = mmRot;
-                }
-                return;
-            }
-            if (msg.indexOf('rot:{') !== -1) {
-                mmParseRot(msg);
-                return;
-            }
-
-            // Multi-part messages (ammo, pickup)
-            if (msg.startsWith('ammo_')) {
-                const p = msg.split('_');
-                if (p.length === 3) updateAmmo(parseInt(p[1]) || 0, parseInt(p[2]) || 0);
-                return;
-            }
-            if (msg.startsWith('weapon_')) { updateWeapon(msg.substring(7)); return; }
-            if (msg.startsWith('pickup_')) {
-                const rest = msg.substring(7);
-                const idx = rest.lastIndexOf('_');
-                if (idx > 0) showPickup(rest.substring(0, idx).replace(/_/g, ' '), rest.substring(idx + 1));
-                else showPickup(rest.replace(/_/g, ' '), '#3efcff');
-                return;
-            }
+            if (msg.indexOf('pos:{') !== -1) { if (mmParsePos(msg) && !mmReady) { mmReady = true; mmDX = mmPX; mmDZ = mmPZ; mmDR = mmRot; } return; }
+            if (msg.indexOf('rot:{') !== -1) { mmParseRot(msg); return; }
+            if (msg.indexOf('ammo_') === 0) { var p = msg.split('_'); if (p.length === 3) updateAmmo(parseInt(p[1]) || 0, parseInt(p[2]) || 0); return; }
+            if (msg.indexOf('weapon_') === 0) { updateWeapon(msg.substring(7)); return; }
+            if (msg.indexOf('pickup_') === 0) { var rest = msg.substring(7); var idx = rest.lastIndexOf('_'); if (idx > 0) showPickup(rest.substring(0, idx).replace(/_/g, ' '), rest.substring(idx + 1)); else showPickup(rest.replace(/_/g, ' '), '#3efcff'); return; }
             if (msg === 'hit_1') { flashHit(); return; }
             if (msg === 'toggle_1') { toggleHud(); return; }
             if (msg === 'briefing_skip') { skipBriefing(); return; }
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
-
-            // Standard key_value
-            const sep = msg.indexOf('_');
-            if (sep === -1) return;
-            const key = msg.substring(0, sep);
-            const val = parseFloat(msg.substring(sep + 1));
-
+            var sep = msg.indexOf('_'); if (sep === -1) return;
+            var key = msg.substring(0, sep); var val = parseFloat(msg.substring(sep + 1));
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill':
-                    S.kills = val; S.streak++;
-                    updateScore(); updateStreak(); checkStreakMilestone();
-                    if (val > 0) addKillFeed();
-                    break;
-                case 'death':
-                    S.deaths = val; S.streak = 0;
-                    updateScore(); updateStreak();
-                    break;
+                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); break;
+                case 'death': S.deaths = val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
-                case 'start':
-                    if (val === 1) showOverlay('MATCH START', 'FIGHT FOR SURVIVAL', '#3efcff', 2500);
-                    break;
-                case 'gameover':
-                    if (val === 1) {
-                        const kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths).toFixed(2);
-                        showOverlay('MATCH OVER', S.kills + ' KILLS  /  K/D: ' + kd, '#ffd700', 5000);
-                    }
-                    break;
-                case 'dead':
-                    if (val === 1) showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000);
-                    break;
-                case 'respawn':
-                    if (val === 1) { updateHealth(100); S.streak = 0; updateStreak(); }
-                    break;
+                case 'start': if (val === 1) showOverlay('MATCH START', 'FIGHT FOR SURVIVAL', '#3efcff', 2500); break;
+                case 'gameover': if (val === 1) { var kd2 = S.deaths === 0 ? S.kills : (S.kills / S.deaths).toFixed(2); showOverlay('MATCH OVER', S.kills + ' KILLS  /  K/D: ' + kd2, '#ffd700', 5000); } break;
+                case 'dead': if (val === 1) showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000); break;
+                case 'respawn': if (val === 1) { updateHealth(100); S.streak = 0; updateStreak(); } break;
             }
         }
 
-        // ══ PORTALS SDK ══
-        if (typeof PortalsSdk !== 'undefined') {
-            PortalsSdk.setMessageListener(function(message) { handleMsg(message); });
-            // Don't focusGameKeyboard during briefing - it steals input
-            // Will call it after mission is selected
-        }
+        if (typeof PortalsSdk !== 'undefined') { PortalsSdk.setMessageListener(function(message) { handleMsg(message); }); }
+        window.addEventListener('message', function(e) { var d = e.data; if (typeof d === 'string') handleMsg(d); else if (d && d.type === 'portals') handleMsg(d.data); });
 
-        // Fallback for browser testing
-        window.addEventListener('message', function(e) {
-            const d = e.data;
-            if (typeof d === 'string') handleMsg(d);
-            else if (d && d.type === 'portals') handleMsg(d.data);
-        });
+        var hudVisible = true;
+        function toggleHud() { hudVisible = !hudVisible; $('hudElements').classList.toggle('hud-hidden', !hudVisible); $('hudToggle').classList.toggle('hidden', !hudVisible); }
 
-        // ══ HUD TOGGLE (toggle_1 message from Portals trigger) ══
-        let hudVisible = true;
-        function toggleHud() {
-            hudVisible = !hudVisible;
-            const el = $('hudElements');
-            const btn = $('hudToggle');
-            el.classList.toggle('hud-hidden', !hudVisible);
-            btn.classList.toggle('hidden', !hudVisible);
-        }
+        // ═══ BRIEFING ═══
+        var briefingActive = true;
+        var briefingScreen = $('briefingScreen');
+        var briefingLore = $('briefingLore');
+        var briefingMissions = $('briefingMissions');
+        var lightningFlash = $('lightningFlash');
 
-        // ═══════════════════════════════════════════
-        // ══ MISSION BRIEFING                      ══
-        // ═══════════════════════════════════════════
-        let briefingActive = true;
-        const briefingScreen = $('briefingScreen');
-        const briefingTitle = $('briefingTitle');
-        const briefingSub = $('briefingSubtitle');
-        const briefingLore = $('briefingLore');
-        const briefingMissions = $('briefingMissions');
-        const briefingSkipBtn = $('briefingSkip');
-
-        // Hide gameplay HUD during briefing
         $('hudElements').style.display = 'none';
         $('hudToggle').style.display = 'none';
 
-        const lightningFlash = $('lightningFlash');
+        // Audio unlock: transparent overlay catches first click to satisfy browser autoplay policy
+        // (Bus's suggestion: one element covering entire screen, disappears after one click)
+        var audioUnlock = $('audioUnlock');
+        audioUnlock.addEventListener('click', function() {
+            var bgDrums = document.getElementById('bgDrums');
+            if (bgDrums) { bgDrums.volume = 0.5; bgDrums.play().catch(function(){}); }
+            audioUnlock.style.display = 'none';
+        });
 
-        // Snowflake / ice particle system — varied sizes, speeds, wind gusts
-        (function spawnSnow() {
-            const container = $('snowflakes');
-            const chars = ['*', '\u2022', '\u00B7', '\u2744', '\u2736'];
-            for (let i = 0; i < 40; i++) {
-                const flake = document.createElement('div');
-                const isLarge = Math.random() < 0.15;
-                const isBright = Math.random() < 0.1;
-                const isGust = Math.random() < 0.25;
-                flake.className = 'snowflake' + (isLarge ? ' large' : '') + (isBright ? ' bright' : '') + (isGust ? ' gust' : '');
-                flake.textContent = isLarge ? chars[3] : chars[Math.floor(Math.random() * 3)];
-                flake.style.left = Math.random() * 100 + '%';
-                flake.style.animationDuration = (isLarge ? 10 : 5) + Math.random() * 8 + 's';
-                flake.style.animationDelay = Math.random() * 12 + 's';
-                flake.style.fontSize = isLarge ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px';
-                container.appendChild(flake);
-            }
-        })();
+        // Snowflakes
+        (function() { var c = $('snowflakes'); var ch = ['*','\u2022','\u00B7','\u2744','\u2736']; for (var i = 0; i < 40; i++) { var f = document.createElement('div'); var lg = Math.random() < 0.15; var br = Math.random() < 0.1; var gu = Math.random() < 0.25; f.className = 'snowflake' + (lg ? ' large' : '') + (br ? ' bright' : '') + (gu ? ' gust' : ''); f.textContent = lg ? ch[3] : ch[Math.floor(Math.random() * 3)]; f.style.left = Math.random() * 100 + '%'; f.style.animationDuration = (lg ? 10 : 5) + Math.random() * 8 + 's'; f.style.animationDelay = Math.random() * 12 + 's'; f.style.fontSize = lg ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px'; c.appendChild(f); } })();
 
-        // Lightning system — random flashes with screen shake
-        let lightningEnabled = true;
-        function triggerLightning() {
-            if (!lightningEnabled || !briefingActive) return;
-            const isDouble = Math.random() < 0.35;
-
-            // Flash overlay
-            lightningFlash.className = 'lightning-flash';
-            void lightningFlash.offsetWidth;
-            lightningFlash.classList.add(isDouble ? 'double' : 'strike');
-
-            // Screen shake + thunder sound
-            briefingScreen.classList.remove('shake');
-            void briefingScreen.offsetWidth;
-            briefingScreen.classList.add('shake');
-            setTimeout(() => briefingScreen.classList.remove('shake'), 200);
-            // Schedule next
-            const next = 3000 + Math.random() * 8000;
-            setTimeout(triggerLightning, next);
-        }
-        // First strike after 2-5 seconds
+        // Lightning
+        var lightningEnabled = true;
+        function triggerLightning() { if (!lightningEnabled || !briefingActive) return; var dbl = Math.random() < 0.35; lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add(dbl ? 'double' : 'strike'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); setTimeout(triggerLightning, 3000 + Math.random() * 8000); }
         setTimeout(triggerLightning, 2000 + Math.random() * 3000);
 
-        // Lore sequence
-        const LORE_LINES = [
+        // Typewriter
+        var LORE_LINES = [
             { text: 'The North. Where the wind whips through you like steel through butter.', cls: 'lore-line' },
             { text: 'Impassable. Inhospitable. Impenetrable.', cls: 'lore-line' },
             { text: 'The Iceborne were led by the most enigmatic of warrior leaders... Koldhart.', cls: 'lore-line', prePause: 400 },
             { text: 'Heart of black. Eyes of blue.', cls: 'lore-rhyme', prePause: 500 },
-            { text: ' Sleep now child, lest Koldhart get you...', cls: 'lore-rhyme' },
+            { text: ' Sleep now child, lest Koldhart get you...', cls: 'lore-rhyme' }
         ];
-
-        let twLineIdx = 0, twCharIdx = 0, twTimer = null;
-        let twCurrentSpan = null;
-        const twCursor = document.createElement('span');
-        twCursor.className = 'briefing-cursor';
+        var twLineIdx = 0, twCharIdx = 0, twTimer = null, twCurrentSpan = null;
+        var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
 
         function typeNextChar() {
-            if (twLineIdx >= LORE_LINES.length) {
-                // Done typing — remove cursor, show divider + missions
-                if (twCursor.parentNode) twCursor.remove();
-                setTimeout(() => {
-                    $('briefingDivider').classList.add('visible');
-                    setTimeout(() => {
-                        briefingMissions.classList.add('visible');
-                        startAutoCountdown();
-                    }, 400);
-                }, 300);
-                return;
-            }
-
-            const line = LORE_LINES[twLineIdx];
-
-            // Create span for new line
-            if (!twCurrentSpan) {
-                // Pre-pause before this line starts (replaces empty pause lines)
-                if (line.prePause && twCharIdx === 0) {
-                    twCharIdx = -1; // flag: pause consumed
-                    twTimer = setTimeout(typeNextChar, line.prePause);
-                    return;
-                }
-                if (twCharIdx === -1) twCharIdx = 0; // resume after prePause
-
-                twCurrentSpan = document.createElement('span');
-                twCurrentSpan.className = line.cls;
-                briefingLore.appendChild(twCurrentSpan);
-                // Dramatic lightning on "Koldhart" line (idx 2) and first rhyme (idx 3)
-                if (twLineIdx === 2 || twLineIdx === 3) {
-                    lightningFlash.className = 'lightning-flash';
-                    void lightningFlash.offsetWidth;
-                    lightningFlash.classList.add('double');
-                    briefingScreen.classList.remove('shake');
-                    void briefingScreen.offsetWidth;
-                    briefingScreen.classList.add('shake');
-                    setTimeout(() => briefingScreen.classList.remove('shake'), 200);
-                }
-            }
-
-            // Type one character
-            if (twCharIdx < line.text.length) {
-                twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1);
-                // Keep cursor after text
-                if (twCursor.parentNode) twCursor.remove();
-                twCurrentSpan.appendChild(twCursor);
-                twCharIdx++;
-                const delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35);
-                twTimer = setTimeout(typeNextChar, delay);
-            } else {
-                // Line done
-                if (twCursor.parentNode) twCursor.remove();
-                twLineIdx++;
-                twCharIdx = 0;
-                twCurrentSpan = null;
-                twTimer = setTimeout(typeNextChar, 500);
-            }
+            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); startAutoCountdown(); }, 400); }, 300); return; }
+            var line = LORE_LINES[twLineIdx];
+            if (!twCurrentSpan) { if (line.prePause && twCharIdx === 0) { twCharIdx = -1; twTimer = setTimeout(typeNextChar, line.prePause); return; } if (twCharIdx === -1) twCharIdx = 0; twCurrentSpan = document.createElement('span'); twCurrentSpan.className = line.cls; briefingLore.appendChild(twCurrentSpan); if (twLineIdx === 2 || twLineIdx === 3) { lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add('double'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); } }
+            if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35); twTimer = setTimeout(typeNextChar, delay); }
+            else { if (twCursor.parentNode) twCursor.remove(); twLineIdx++; twCharIdx = 0; twCurrentSpan = null; twTimer = setTimeout(typeNextChar, 500); }
         }
 
-        // ══ BRIEFING AUDIO ══
-        const bgDrums = document.getElementById('bgDrums');
-        if (bgDrums) bgDrums.volume = 0.5;
+        function fadeOutAudio() { var d = document.getElementById('bgDrums'); if (!d) return; var v = d.volume; var fade = setInterval(function() { v -= 0.05; if (v <= 0) { d.volume = 0; d.pause(); clearInterval(fade); } else { d.volume = v; } }, 80); }
 
-        function playBriefingAudio() {
-            if (bgDrums) bgDrums.play().catch(function(){});
-        }
+        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); }
 
-        function fadeOutAudio() {
-            if (!bgDrums) return;
-            var vol = bgDrums.volume;
-            var fade = setInterval(function() {
-                vol -= 0.05;
-                if (vol <= 0) {
-                    bgDrums.volume = 0;
-                    bgDrums.pause();
-                    clearInterval(fade);
-                } else {
-                    bgDrums.volume = vol;
-                }
-            }, 80);
-        }
+        function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); startAutoCountdown(); }
 
-        // Try autoplay immediately (works in some iframe contexts)
-        // With noPointerEvents=true, clicks never reach us, so we can't rely on click-to-unlock
-        playBriefingAudio();
+        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
-        function startBriefing() {
-            playBriefingAudio();
-            setTimeout(() => briefingTitle.classList.add('visible'), 300);
-            setTimeout(() => briefingSub.classList.add('visible'), 600);
-            // Start typewriter after title settles
-            setTimeout(typeNextChar, 2200);
-        }
+        function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 5; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
 
-        function skipBriefing() {
-            // Skip typewriter, show everything instantly
-            if (twTimer) clearTimeout(twTimer);
-            if (twCursor.parentNode) twCursor.remove();
-            briefingLore.innerHTML = '';
-            LORE_LINES.forEach(line => {
-                const span = document.createElement('span');
-                span.className = line.cls;
-                span.textContent = line.text;
-                briefingLore.appendChild(span);
-            });
-            briefingTitle.classList.add('visible');
-            briefingSub.classList.add('visible');
-            $('briefingDivider').classList.add('visible');
-            briefingMissions.classList.add('visible');
-            startAutoCountdown();
-        }
-
-        function selectMission(mode) {
-            if (!briefingActive) return;
-            briefingActive = false;
-            lightningEnabled = false;
-            fadeOutAudio();
-
-            // Fade out briefing
-            briefingScreen.classList.add('fade-out');
-            setTimeout(function() {
-                briefingScreen.classList.add('hidden');
-                // Show gameplay HUD
-                $('hudElements').style.display = '';
-                $('hudToggle').style.display = '';
-            }, 900);
-
-            // Send mission choice to Portals (non-blocking)
-            try {
-                var msg = mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena';
-                window.parent.postMessage(msg, '*');
-            } catch(e) {}
-        }
-
-        // Auto-start countdown after mission cards are shown
-        function startAutoCountdown() {
-            var countEl = document.createElement('div');
-            countEl.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;';
-            briefingMissions.parentNode.appendChild(countEl);
-            var sec = 5;
-            countEl.textContent = 'AUTO-START IN ' + sec + '...';
-            var iv = setInterval(function() {
-                sec--;
-                if (sec <= 0) {
-                    clearInterval(iv);
-                    selectMission('arena');
-                } else {
-                    countEl.textContent = 'AUTO-START IN ' + sec + '...';
-                }
-            }, 1000);
-        }
-
-        // Start the briefing sequence on load
         startBriefing();
 
         // ══ INIT ══
-        updateHealth(100);
-        updateArmor(0);
-        updateScore();
-        updateWeapon('none');
+        updateHealth(100); updateArmor(0); updateScore(); updateWeapon('none');
     </script>
 </body>
 </html>
