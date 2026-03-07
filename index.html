@@ -6,7 +6,7 @@
     <title>DinoDawgs Battle HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Bungee&family=Rubik+Spray+Paint&family=Permanent+Marker&display=swap" rel="stylesheet">
     <script src="https://portals-labs.github.io/portals-sdk/portals-sdk.js?v=10005456"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,7 +16,7 @@
             overflow: hidden;
             background: transparent !important;
             background-color: transparent !important;
-            font-family: 'Rubik Spray Paint', cursive;
+            font-family: 'Orbitron', sans-serif;
             color: #3efcff;
             user-select: none;
             -webkit-user-select: none;
@@ -1399,7 +1399,7 @@
 
             // ── Cardinal direction labels ──
             mmCtx.fillStyle = 'rgba(62, 252, 255, 0.5)';
-            mmCtx.font = '9px Rubik Spray Paint';
+            mmCtx.font = '9px Orbitron';
             mmCtx.textAlign = 'center';
             mmCtx.textBaseline = 'middle';
             var cardR = r - 10;
@@ -1725,11 +1725,9 @@
             }, 80);
         }
 
-        // Unlock audio on first click (browser autoplay policy)
-        document.addEventListener('click', function onFirstClick() {
-            playBriefingAudio();
-            document.removeEventListener('click', onFirstClick);
-        });
+        // Try autoplay immediately (works in some iframe contexts)
+        // With noPointerEvents=true, clicks never reach us, so we can't rely on click-to-unlock
+        playBriefingAudio();
 
         function startBriefing() {
             playBriefingAudio();
