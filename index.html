@@ -194,7 +194,7 @@
         .snowflake.gust { animation: snowGust linear infinite; }
         @keyframes snowGust { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; } 5% { opacity: 0.5; } 30% { transform: translateY(33vh) translateX(60px) rotate(120deg); } 60% { transform: translateY(66vh) translateX(-20px) rotate(240deg); } 100% { transform: translateY(110vh) translateX(40px) rotate(400deg); opacity: 0; } }
 
-        /* Audio unlock removed — no longer needed without noPointerEvents */
+        /* Audio uses Web Audio API — auto-resumes on first postMessage from Portals */
 
         @media (max-width: 768px) {
             .vitals { width: 200px; } .weapon-panel { width: 180px; } .score-panel { width: 170px; }
@@ -210,7 +210,6 @@
     </style>
 </head>
 <body>
-    <audio id="bgDrums" loop preload="auto" autoplay src="tribal_drums.mp3"></audio>
 
 
     <div class="hud-container">
@@ -428,7 +427,7 @@
         }
 
         if (typeof PortalsSdk !== 'undefined') { PortalsSdk.setMessageListener(function(message) { handleMsg(message); }); }
-        window.addEventListener('message', function(e) { var d = e.data; if (typeof d === 'string') handleMsg(d); else if (d && d.type === 'portals') handleMsg(d.data); });
+        window.addEventListener('message', function(e) { var d = e.data; if (typeof d === 'string') handleMsg(d); else if (d && d.type === 'portals') handleMsg(d.data); if (!drumsPlaying) tryPlayDrums(); });
 
         var hudVisible = true;
         function toggleHud() { hudVisible = !hudVisible; $('hudElements').classList.toggle('hud-hidden', !hudVisible); $('hudToggle').classList.toggle('hidden', !hudVisible); }
@@ -443,13 +442,36 @@
         $('hudElements').style.display = 'none';
         $('hudToggle').style.display = 'none';
 
-        // Try autoplay drums — retry every 2s in case browser blocks first attempt
-        (function() {
-            var d = document.getElementById('bgDrums'); if (!d) return;
-            d.volume = 0.4;
-            function tryPlay() { d.play().catch(function() { setTimeout(tryPlay, 2000); }); }
-            tryPlay();
-        })();
+        // ══ WEB AUDIO API DRUMS ══
+        var drumsCtx = null, drumsBuffer = null, drumsSource = null, drumsGain = null, drumsPlaying = false;
+        function initDrums() {
+            try {
+                drumsCtx = new (window.AudioContext || window.webkitAudioContext)();
+                drumsGain = drumsCtx.createGain();
+                drumsGain.gain.value = 0.4;
+                drumsGain.connect(drumsCtx.destination);
+                fetch('tribal_drums.mp3').then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
+                    return drumsCtx.decodeAudioData(buf);
+                }).then(function(decoded) {
+                    drumsBuffer = decoded;
+                    tryPlayDrums();
+                }).catch(function(e) { console.log('Drums load error:', e); });
+            } catch(e) { console.log('No AudioContext:', e); }
+        }
+        function tryPlayDrums() {
+            if (!drumsCtx || !drumsBuffer || drumsPlaying || !briefingActive) return;
+            if (drumsCtx.state === 'suspended') {
+                drumsCtx.resume().then(tryPlayDrums).catch(function() { setTimeout(tryPlayDrums, 1500); });
+                return;
+            }
+            drumsSource = drumsCtx.createBufferSource();
+            drumsSource.buffer = drumsBuffer;
+            drumsSource.loop = true;
+            drumsSource.connect(drumsGain);
+            drumsSource.start(0);
+            drumsPlaying = true;
+        }
+        initDrums();
 
         // Snowflakes
         (function() { var c = $('snowflakes'); var ch = ['*','\u2022','\u00B7','\u2744','\u2736']; for (var i = 0; i < 40; i++) { var f = document.createElement('div'); var lg = Math.random() < 0.15; var br = Math.random() < 0.1; var gu = Math.random() < 0.25; f.className = 'snowflake' + (lg ? ' large' : '') + (br ? ' bright' : '') + (gu ? ' gust' : ''); f.textContent = lg ? ch[3] : ch[Math.floor(Math.random() * 3)]; f.style.left = Math.random() * 100 + '%'; f.style.animationDuration = (lg ? 10 : 5) + Math.random() * 8 + 's'; f.style.animationDelay = Math.random() * 12 + 's'; f.style.fontSize = lg ? (16 + Math.random() * 8) + 'px' : (6 + Math.random() * 10) + 'px'; c.appendChild(f); } })();
@@ -478,7 +500,7 @@
             else { if (twCursor.parentNode) twCursor.remove(); twLineIdx++; twCharIdx = 0; twCurrentSpan = null; twTimer = setTimeout(typeNextChar, 500); }
         }
 
-        function fadeOutAudio() { var d = document.getElementById('bgDrums'); if (!d) return; var v = d.volume; var fade = setInterval(function() { v -= 0.05; if (v <= 0) { d.volume = 0; d.pause(); clearInterval(fade); } else { d.volume = v; } }, 80); }
+        function fadeOutAudio() { if (!drumsCtx || !drumsGain || !drumsPlaying) return; drumsGain.gain.linearRampToValueAtTime(0, drumsCtx.currentTime + 0.8); setTimeout(function() { if (drumsSource) { try { drumsSource.stop(); } catch(e) {} drumsSource = null; } drumsPlaying = false; }, 900); }
 
         function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); }
 
