@@ -450,7 +450,7 @@
                 drumsGain = drumsCtx.createGain();
                 drumsGain.gain.value = 0.4;
                 drumsGain.connect(drumsCtx.destination);
-                fetch('tribal_drums.mp3').then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
+                fetch('drums_loop.mp3').then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
                     return drumsCtx.decodeAudioData(buf);
                 }).then(function(decoded) {
                     drumsBuffer = decoded;
