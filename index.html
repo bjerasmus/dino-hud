@@ -215,7 +215,7 @@
 
     <div class="hud-container">
         <!-- ═══ AUDIO ENABLE OVERLAY (first click enables Web Audio, then disappears) ═══ -->
-        <div id="audioOverlay" onclick="enableAudio()" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:3000;pointer-events:auto;cursor:pointer;background:transparent;"></div>
+        <!-- audio overlay removed: noPointerEvents prevents clicks -->
 
         <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
         <div class="briefing-screen" id="briefingScreen">
@@ -250,7 +250,7 @@
                     </div>
                 </div>
             </div>
-            <div class="briefing-skip" id="briefingSkip" onclick="skipBriefing()">SKIP INTRO &#x25B6;</div>
+            <div class="briefing-skip" id="briefingSkip">AUTO-START</div>
         </div>
 
         <!-- HUD Toggle -->
@@ -518,8 +518,8 @@
         var LORE_LINES = [
             { text: 'The North. Where the wind whips through you like steel through butter.', cls: 'lore-line' },
             { text: 'Impassable. Inhospitable. Impenetrable.', cls: 'lore-line' },
-            { text: 'The Iceborne were led by the most enigmatic of warrior leaders... Koldhart.', cls: 'lore-line', prePause: 400 },
-            { text: 'Heart of black. Eyes of blue.', cls: 'lore-rhyme', prePause: 500 },
+            { text: 'The Iceborne were led by the most enigmatic of warrior leaders... Koldhart.', cls: 'lore-line', prePause: 200 },
+            { text: 'Heart of black. Eyes of blue.', cls: 'lore-rhyme', prePause: 250 },
             { text: ' Sleep now child, lest Koldhart get you...', cls: 'lore-rhyme' }
         ];
         var twLineIdx = 0, twCharIdx = 0, twTimer = null, twCurrentSpan = null;
@@ -529,25 +529,21 @@
             if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); startAutoCountdown(); }, 400); }, 300); return; }
             var line = LORE_LINES[twLineIdx];
             if (!twCurrentSpan) { if (line.prePause && twCharIdx === 0) { twCharIdx = -1; twTimer = setTimeout(typeNextChar, line.prePause); return; } if (twCharIdx === -1) twCharIdx = 0; twCurrentSpan = document.createElement('span'); twCurrentSpan.className = line.cls; briefingLore.appendChild(twCurrentSpan); if (twLineIdx === 2 || twLineIdx === 3) { lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add('double'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); } }
-            if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35); twTimer = setTimeout(typeNextChar, delay); }
-            else { if (twCursor.parentNode) twCursor.remove(); twLineIdx++; twCharIdx = 0; twCurrentSpan = null; twTimer = setTimeout(typeNextChar, 500); }
+            if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 60 : (line.text[twCharIdx - 1] === ',' ? 40 : 20); twTimer = setTimeout(typeNextChar, delay); }
+            else { if (twCursor.parentNode) twCursor.remove(); twLineIdx++; twCharIdx = 0; twCurrentSpan = null; twTimer = setTimeout(typeNextChar, 300); }
         }
 
         function fadeOutAudio() { if (!drumsCtx || !drumsGain || !drumsPlaying) return; drumsGain.gain.linearRampToValueAtTime(0, drumsCtx.currentTime + 0.8); setTimeout(function() { if (drumsSource) { try { drumsSource.stop(); } catch(e) {} drumsSource = null; } drumsPlaying = false; }, 900); }
 
-        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); }
+        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 200); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 400); setTimeout(typeNextChar, 1000); }
 
         function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); startAutoCountdown(); }
 
         function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; if (typeof PortalsSdk !== 'undefined') PortalsSdk.focusGameKeyboard(); }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
-        function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 5; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
+        function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 3; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
 
-        function enableAudio() {
-            var overlay = $('audioOverlay');
-            if (overlay) { overlay.style.pointerEvents = 'none'; overlay.style.display = 'none'; }
-            tryPlayDrums();
-        }
+        tryPlayDrums();
 
         startBriefing();
 
