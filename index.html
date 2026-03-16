@@ -247,7 +247,7 @@
                     </div>
                 </div>
             </div>
-            <div class="briefing-skip" id="briefingSkip">AUTO-START</div>
+            <div class="briefing-skip" id="briefingSkip">PRESS ESC TO SKIP</div>
         </div>
 
         <!-- HUD Toggle -->
@@ -541,6 +541,13 @@
         function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 5; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
 
         startBriefing();
+
+        // ══ ESC TO SKIP BRIEFING ══
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && briefingActive) {
+                skipBriefing();
+            }
+        });
 
         // ══ INIT ══
         updateHealth(100); updateArmor(0); updateScore(); updateWeapon('none');
