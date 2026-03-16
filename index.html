@@ -214,6 +214,9 @@
 
 
     <div class="hud-container">
+        <!-- ═══ AUDIO ENABLE OVERLAY (first click enables Web Audio, then disappears) ═══ -->
+        <div id="audioOverlay" onclick="enableAudio()" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:3000;pointer-events:auto;cursor:pointer;background:transparent;"></div>
+
         <!-- ═══ MISSION BRIEFING SCREEN ═══ -->
         <div class="briefing-screen" id="briefingScreen">
             <div class="briefing-map"></div>
@@ -536,9 +539,15 @@
 
         function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); startAutoCountdown(); }
 
-        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
+        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; if (typeof PortalsSdk !== 'undefined') PortalsSdk.focusGameKeyboard(); }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
         function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 5; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
+
+        function enableAudio() {
+            var overlay = $('audioOverlay');
+            if (overlay) { overlay.style.pointerEvents = 'none'; overlay.style.display = 'none'; }
+            tryPlayDrums();
+        }
 
         startBriefing();
 
