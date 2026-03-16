@@ -185,8 +185,8 @@
         .mission-icon { font-size: 36px; margin-bottom: 12px; filter: drop-shadow(0 0 12px currentColor); }
         .mission-card:not(.iceborne) .mission-icon { color: #3efcff; }
         .mission-card.iceborne .mission-icon { color: #4aa3ff; }
-        .briefing-skip { position: absolute; bottom: 24px; right: 30px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(62,252,255,0.3); cursor: pointer; transition: color 0.2s, text-shadow 0.2s; z-index: 20; }
-        .briefing-skip:hover { color: rgba(62,252,255,0.7); text-shadow: 0 0 10px rgba(62,252,255,0.4); }
+        .briefing-skip { position: absolute; bottom: 24px; right: 30px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(62,252,255,0.5); cursor: pointer; transition: all 0.25s ease; z-index: 20; padding: 10px 20px; border: 1px solid rgba(62,252,255,0.25); border-radius: 6px; background: rgba(5,10,20,0.5); pointer-events: auto; }
+        .briefing-skip:hover { color: #3efcff; text-shadow: 0 0 12px rgba(62,252,255,0.6); border-color: rgba(62,252,255,0.6); background: rgba(5,10,20,0.8); box-shadow: 0 0 15px rgba(62,252,255,0.3); }
         .snowflakes { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 3; }
         .snowflake { position: absolute; top: -5%; color: rgba(180, 210, 255, 0.5); animation: snowfall linear infinite; }
         .snowflake.large { color: rgba(200, 225, 255, 0.3); filter: blur(1px); }
@@ -247,7 +247,7 @@
                     </div>
                 </div>
             </div>
-            <div class="briefing-skip" id="briefingSkip">PRESS ESC TO SKIP</div>
+            <div class="briefing-skip" id="briefingSkip" onclick="skipBriefing()">SKIP INTRO &#x25B6;</div>
         </div>
 
         <!-- HUD Toggle -->
