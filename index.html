@@ -54,7 +54,8 @@
         @keyframes boostPulse { 0%,100% { box-shadow: 0 0 12px #ffd700; } 50% { box-shadow: 0 0 24px #ffd700; } }
 
         .weapon-panel { position: absolute; bottom: 30px; right: 30px; width: 240px; text-align: center; }
-        .weapon-icon { width: 120px; height: 50px; margin: 0 auto 8px; }
+        .weapon-icon { width: 120px; height: 60px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+        .weapon-icon img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px #3efcff); }
         .weapon-svg { fill: #3efcff; filter: drop-shadow(0 0 8px #3efcff); }
         .weapon-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 0 8px #3efcff; }
         .ammo-display { font-size: 30px; font-weight: 900; color: white; text-shadow: 0 0 10px #3efcff; letter-spacing: 2px; }
@@ -317,11 +318,11 @@
         var gameOverlay = $('gameOverlay'), overlayTitle = $('overlayTitle'), overlaySub = $('overlaySubtitle');
         var dmgFlash = $('damageFlash'), boostInd = $('boostIndicator');
 
-        var WEAPON_SVG = {
+        var WEAPON_IMG = {
             none: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="35" y="25" width="50" height="10" rx="2"/><circle cx="32" cy="30" r="8"/></svg>',
-            pistol: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="40" y="22" width="35" height="16" rx="2"/><rect x="30" y="28" width="15" height="4"/><rect x="75" y="26" width="8" height="8" rx="1"/><circle cx="38" cy="30" r="4"/></svg>',
-            rifle: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="25" y="26" width="70" height="8" rx="2"/><rect x="35" y="20" width="15" height="20" rx="2"/><rect x="15" y="28" width="12" height="4"/><circle cx="93" cy="30" r="5"/></svg>',
-            shotgun: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="25" y="24" width="65" height="12" rx="2"/><rect x="35" y="18" width="18" height="24" rx="2"/><rect x="15" y="28" width="12" height="4"/><rect x="88" y="27" width="10" height="6" rx="1"/></svg>'
+            pistol: '<img src="pistol.png" alt="Pistol">',
+            rifle: '<img src="rifle.png" alt="Rifle">',
+            shotgun: '<img src="shotgun.png" alt="Shotgun">'
         };
         var STREAKS = [[15,'GODLIKE'],[10,'UNSTOPPABLE'],[7,'RAMPAGE'],[5,'KILLING SPREE'],[3,'TRIPLE KILL']];
 
@@ -356,7 +357,7 @@
             healthBar.classList.toggle('pulse-red', S.hp > 0 && S.hp < 25);
         }
         function updateArmor(val) { S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); }
-        function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_SVG[S.weapon] || WEAPON_SVG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
+        function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
         function updateAmmo(clip, reserve) { S.clip = Math.max(0, clip); S.reserve = Math.max(0, reserve); if (S.weapon === 'none') return; ammoDisp.textContent = S.clip + ' / ' + S.reserve; ammoDisp.className = 'ammo-display'; if (S.clip === 0) ammoDisp.classList.add('ammo-empty'); else if (S.clip <= 3) ammoDisp.classList.add('ammo-low'); }
         function updateScore() { killsVal.textContent = S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
         function updateStreak() { var label = ''; for (var i = 0; i < STREAKS.length; i++) { if (S.streak >= STREAKS[i][0]) { label = STREAKS[i][1]; break; } } if (label) { streakBadge.textContent = label; streakBadge.classList.add('active'); } else { streakBadge.classList.remove('active'); } }
@@ -526,7 +527,7 @@
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
 
         function typeNextChar() {
-            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); startAutoCountdown(); }, 400); }, 300); return; }
+            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); }, 400); }, 300); return; }
             var line = LORE_LINES[twLineIdx];
             if (!twCurrentSpan) { if (line.prePause && twCharIdx === 0) { twCharIdx = -1; twTimer = setTimeout(typeNextChar, line.prePause); return; } if (twCharIdx === -1) twCharIdx = 0; twCurrentSpan = document.createElement('span'); twCurrentSpan.className = line.cls; briefingLore.appendChild(twCurrentSpan); if (twLineIdx === 2 || twLineIdx === 3) { lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add('double'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); } }
             if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35); twTimer = setTimeout(typeNextChar, delay); }
@@ -535,13 +536,14 @@
 
         function fadeOutAudio() { if (!drumsCtx || !drumsGain || !drumsPlaying) return; drumsGain.gain.linearRampToValueAtTime(0, drumsCtx.currentTime + 0.8); setTimeout(function() { if (drumsSource) { try { drumsSource.stop(); } catch(e) {} drumsSource = null; } drumsPlaying = false; }, 900); }
 
-        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); }
+        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); startAutoCountdown(); }
 
-        function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); startAutoCountdown(); }
+        function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); }
 
         function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; if (typeof PortalsSdk !== 'undefined') PortalsSdk.focusGameKeyboard(); }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
-        function startAutoCountdown() { var el = document.createElement('div'); el.style.cssText = 'text-align:center;margin-top:20px;font-family:Bungee,cursive;font-size:16px;color:rgba(62,252,255,0.6);letter-spacing:4px;'; briefingMissions.parentNode.appendChild(el); var sec = 3; el.textContent = 'AUTO-START IN ' + sec + '...'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'AUTO-START IN ' + sec + '...'; } }, 1000); }
+        var autoCountdownStarted = false;
+        function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 5; el.textContent = 'SKIP IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'SKIP IN ' + sec + '...'; } }, 1000); }
 
         tryPlayDrums();
 
