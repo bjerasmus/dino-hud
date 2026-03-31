@@ -446,6 +446,7 @@
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
             var sep = msg.indexOf('_'); if (sep === -1) return;
             var key = msg.substring(0, sep); var val = parseFloat(msg.substring(sep + 1));
+            if (key === 'health') console.log('[HUD] health msg:', msg, 'val:', val, 'current:', S.hp);
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
@@ -527,7 +528,7 @@
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
 
         function typeNextChar() {
-            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); }, 400); }, 300); return; }
+            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); setTimeout(startAutoCountdown, 2000); }, 400); }, 300); return; }
             var line = LORE_LINES[twLineIdx];
             if (!twCurrentSpan) { if (line.prePause && twCharIdx === 0) { twCharIdx = -1; twTimer = setTimeout(typeNextChar, line.prePause); return; } if (twCharIdx === -1) twCharIdx = 0; twCurrentSpan = document.createElement('span'); twCurrentSpan.className = line.cls; briefingLore.appendChild(twCurrentSpan); if (twLineIdx === 2 || twLineIdx === 3) { lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add('double'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); } }
             if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35); twTimer = setTimeout(typeNextChar, delay); }
@@ -536,23 +537,28 @@
 
         function fadeOutAudio() { if (!drumsCtx || !drumsGain || !drumsPlaying) return; drumsGain.gain.linearRampToValueAtTime(0, drumsCtx.currentTime + 0.8); setTimeout(function() { if (drumsSource) { try { drumsSource.stop(); } catch(e) {} drumsSource = null; } drumsPlaying = false; }, 900); }
 
-        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); startAutoCountdown(); }
+        function startBriefing() { setTimeout(function() { $('briefingTitle').classList.add('visible'); }, 300); setTimeout(function() { $('briefingSubtitle').classList.add('visible'); }, 600); setTimeout(typeNextChar, 2200); }
 
         function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); }
 
         function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; if (typeof PortalsSdk !== 'undefined') PortalsSdk.focusGameKeyboard(); }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
         var autoCountdownStarted = false;
-        function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 5; el.textContent = 'SKIP IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'SKIP IN ' + sec + '...'; } }, 1000); }
+        function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 10; el.textContent = 'ENTERING ARENA IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'ENTERING ARENA IN ' + sec + '...'; } }, 1000); }
 
         tryPlayDrums();
 
         startBriefing();
 
-        // ══ ESC TO SKIP BRIEFING ══
+        // ══ ESC TO SKIP BRIEFING (2-stage) ══
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && briefingActive) {
-                skipBriefing();
+                if (briefingMissions.classList.contains('visible')) {
+                    selectMission('arena');
+                } else {
+                    skipBriefing();
+                    startAutoCountdown();
+                }
             }
         });
 
