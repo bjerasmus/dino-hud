@@ -170,7 +170,7 @@
         .neon-logo { width: 90px; height: 90px; flex-shrink: 0; pointer-events: none; align-self: center; }
         .neon-logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
         @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
-        .mission-card { width: 290px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+        .mission-card { width: 290px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
         .mission-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent); transition: left 0.6s ease; }
         .mission-card:hover::before { left: 100%; }
         .mission-card::after { content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 2px; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
@@ -236,7 +236,7 @@
                 <div class="briefing-lore" id="briefingLore"></div>
                 <div class="briefing-divider" id="briefingDivider"></div>
                 <div class="briefing-missions" id="briefingMissions">
-                    <div class="mission-card">
+                    <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
                         <div class="mission-desc">Free-for-all. 8 players. First to 20 kills.</div>
@@ -244,14 +244,14 @@
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
                     </div>
-                    <div class="mission-card iceborne">
+                    <div class="mission-card iceborne" id="missionIceborne" onclick="selectMission('iceborne')">
                         <div class="mission-icon">&#x2744;</div>
                         <div class="mission-mode">Battle of the Iceborne</div>
                         <div class="mission-desc">Clear the arena. Kill them all. Face Koldhart.</div>
                     </div>
                 </div>
             </div>
-            <div class="briefing-skip" id="briefingSkip">AUTO-START</div>
+            <div class="briefing-skip" id="briefingSkip" onclick="if(briefingMissions.classList.contains('visible')){selectMission('arena')}else{skipBriefing();startAutoCountdown()}">SKIP / AUTO-START</div>
         </div>
 
         <!-- HUD Toggle -->
@@ -560,7 +560,7 @@
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
 
         function typeNextChar() {
-            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); setTimeout(startAutoCountdown, 2000); }, 400); }, 300); return; }
+            if (twLineIdx >= LORE_LINES.length) { if (twCursor.parentNode) twCursor.remove(); setTimeout(function() { $('briefingDivider').classList.add('visible'); setTimeout(function() { briefingMissions.classList.add('visible'); startAutoCountdown(); }, 200); }, 100); return; }
             var line = LORE_LINES[twLineIdx];
             if (!twCurrentSpan) { if (line.prePause && twCharIdx === 0) { twCharIdx = -1; twTimer = setTimeout(typeNextChar, line.prePause); return; } if (twCharIdx === -1) twCharIdx = 0; twCurrentSpan = document.createElement('span'); twCurrentSpan.className = line.cls; briefingLore.appendChild(twCurrentSpan); if (twLineIdx === 2 || twLineIdx === 3) { lightningFlash.className = 'lightning-flash'; void lightningFlash.offsetWidth; lightningFlash.classList.add('double'); briefingScreen.classList.remove('shake'); void briefingScreen.offsetWidth; briefingScreen.classList.add('shake'); setTimeout(function() { briefingScreen.classList.remove('shake'); }, 200); } }
             if (twCharIdx < line.text.length) { twCurrentSpan.textContent = line.text.substring(0, twCharIdx + 1); if (twCursor.parentNode) twCursor.remove(); twCurrentSpan.appendChild(twCursor); twCharIdx++; var delay = line.text[twCharIdx - 1] === '.' ? 120 : (line.text[twCharIdx - 1] === ',' ? 80 : 35); twTimer = setTimeout(typeNextChar, delay); }
@@ -573,10 +573,10 @@
 
         function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); }
 
-        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; if (typeof PortalsSdk !== 'undefined') PortalsSdk.focusGameKeyboard(); }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
+        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.style.pointerEvents = 'none'; briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; document.documentElement.style.pointerEvents = 'none'; document.body.style.pointerEvents = 'none'; if (typeof PortalsSdk !== 'undefined') { PortalsSdk.focusGameKeyboard(); try { PortalsSdk.setPointerEventsEnabled(false); } catch(e) {} } }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
         var autoCountdownStarted = false;
-        function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 10; el.textContent = 'ENTERING ARENA IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'ENTERING ARENA IN ' + sec + '...'; } }, 1000); }
+        function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 3; el.textContent = 'ENTERING ARENA IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'ENTERING ARENA IN ' + sec + '...'; } }, 1000); }
 
         tryPlayDrums();
 
