@@ -304,6 +304,7 @@
 
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
+        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 40, huntDone = false;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
         var armorBar = $('armorBar'), armorText = $('armorText');
@@ -363,12 +364,13 @@
         function updateStreak() { var label = ''; for (var i = 0; i < STREAKS.length; i++) { if (S.streak >= STREAKS[i][0]) { label = STREAKS[i][1]; break; } } if (label) { streakBadge.textContent = label; streakBadge.classList.add('active'); } else { streakBadge.classList.remove('active'); } }
         function checkStreakMilestone() { for (var i = 0; i < STREAKS.length; i++) { if (S.streak === STREAKS[i][0]) { streakText.textContent = STREAKS[i][1]; streakAnnounce.classList.remove('active'); void streakAnnounce.offsetWidth; streakAnnounce.classList.add('active'); setTimeout(function() { streakAnnounce.classList.remove('active'); }, 2500); break; } } }
         function updateTimer(sec) { S.timerSec = Math.max(0, sec); if (!S.timerActive) { S.timerActive = true; timerPanel.classList.add('active'); } var m = Math.floor(S.timerSec / 60); var s = S.timerSec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.toggle('timer-warning', S.timerSec < 30 && S.timerSec > 0); }
-        setInterval(function() { if (S.timerActive && S.timerSec > 0) updateTimer(S.timerSec - 1); }, 1000);
+        setInterval(function() { if (S.timerActive && S.timerSec > 0 && !huntMode) updateTimer(S.timerSec - 1); }, 1000);
         function addKillFeed() { var msg = document.createElement('div'); msg.className = 'kf-msg'; msg.textContent = 'KILL CONFIRMED'; killFeed.appendChild(msg); setTimeout(function() { if (msg.parentNode) msg.remove(); }, 2500); while (killFeed.children.length > 3) killFeed.removeChild(killFeed.firstChild); }
         function flashHit() { crosshair.classList.add('hit'); setTimeout(function() { crosshair.classList.remove('hit'); }, 180); }
         function showPickup(text, color) { pickupFlash.textContent = text; pickupFlash.style.color = color || '#3efcff'; pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff'); pickupFlash.classList.remove('active'); void pickupFlash.offsetWidth; pickupFlash.classList.add('active'); setTimeout(function() { pickupFlash.classList.remove('active'); }, 2000); }
         function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
         function setBoost(on) { if (on) boostInd.classList.add('active'); else boostInd.classList.remove('active'); }
+        function startHuntTimer() { huntMode = true; huntStart = Date.now(); huntDone = false; S.timerActive = true; timerPanel.classList.add('active'); if (huntInterval) clearInterval(huntInterval); huntInterval = setInterval(function() { if (huntDone) return; var sec = Math.floor((Date.now() - huntStart) / 1000); var m = Math.floor(sec / 60); var s = sec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.remove('timer-warning'); }, 250); }
 
         // ══ MINIMAP (RADAR STYLE) ══
         var MM = { size: 160, radius: 80, range: 120 };
@@ -476,13 +478,16 @@
             if (msg === 'toggle_1') { toggleHud(); return; }
             if (msg === 'briefing_skip') { skipBriefing(); return; }
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
+            if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); return; }
+            if (msg === 'cam_tps') { if (typeof PortalsSdk !== 'undefined') PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_tps',TaskTargetState:'SetNotActiveToActive'})); return; }
+            if (msg === 'cam_fps') { if (typeof PortalsSdk !== 'undefined') PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_fps',TaskTargetState:'SetNotActiveToActive'})); return; }
             var sep = msg.indexOf('_'); if (sep === -1) return;
             var key = msg.substring(0, sep); var val = parseFloat(msg.substring(sep + 1));
             if (key === 'health') console.log('[HUD] health msg:', msg, 'val:', val, 'current:', S.hp);
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); break;
+                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showOverlay('HUNT COMPLETE', tStr + ' \u2014 ' + S.deaths + ' DEATHS', '#ffd700', 8000); } break;
                 case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
@@ -573,7 +578,7 @@
 
         function skipBriefing() { if (twTimer) clearTimeout(twTimer); if (twCursor.parentNode) twCursor.remove(); briefingLore.innerHTML = ''; for (var i = 0; i < LORE_LINES.length; i++) { var span = document.createElement('span'); span.className = LORE_LINES[i].cls; span.textContent = LORE_LINES[i].text; briefingLore.appendChild(span); } $('briefingTitle').classList.add('visible'); $('briefingSubtitle').classList.add('visible'); $('briefingDivider').classList.add('visible'); briefingMissions.classList.add('visible'); }
 
-        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.style.pointerEvents = 'none'; briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; $('hudToggle').style.display = ''; document.documentElement.style.pointerEvents = 'none'; document.body.style.pointerEvents = 'none'; if (typeof PortalsSdk !== 'undefined') { PortalsSdk.focusGameKeyboard(); try { PortalsSdk.setPointerEventsEnabled(false); } catch(e) {} } }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
+        function selectMission(mode) { if (!briefingActive) return; briefingActive = false; lightningEnabled = false; fadeOutAudio(); briefingScreen.style.pointerEvents = 'none'; briefingScreen.classList.add('fade-out'); setTimeout(function() { briefingScreen.classList.add('hidden'); $('hudElements').style.display = ''; if (!huntMode) $('hudToggle').style.display = ''; document.documentElement.style.pointerEvents = 'none'; document.body.style.pointerEvents = 'none'; if (typeof PortalsSdk !== 'undefined') { PortalsSdk.focusGameKeyboard(); try { PortalsSdk.setPointerEventsEnabled(false); } catch(e) {} } }, 900); try { window.parent.postMessage(mode === 'iceborne' ? 'mission_iceborne' : 'mission_arena', '*'); } catch(e) {} }
 
         var autoCountdownStarted = false;
         function startAutoCountdown() { if (autoCountdownStarted) return; autoCountdownStarted = true; var el = $('briefingSkip'); var sec = 3; el.textContent = 'ENTERING ARENA IN ' + sec + '...'; el.style.display = 'block'; var iv = setInterval(function() { sec--; if (sec <= 0) { clearInterval(iv); selectMission('arena'); } else { el.textContent = 'ENTERING ARENA IN ' + sec + '...'; } }, 1000); }
