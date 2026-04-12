@@ -552,7 +552,8 @@
             if (msg === 'hide_autostart') { autoCountdownStarted = true; var bs = $('briefingSkip'); if (bs) bs.style.display = 'none'; return; }
             if (msg === 'briefing_skip') { skipBriefing(); return; }
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
-            if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); setTimeout(showHuntBrief, 1200); return; }
+            if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); return; }
+            if (msg === 'dismiss_hunt_brief') { dismissHuntBrief(); return; }
             if (msg === 'cam_tps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_tps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_tps',TaskTargetState:'SetNotActiveToActive'})); } return; }
             if (msg === 'cam_fps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_fps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_fps',TaskTargetState:'SetNotActiveToActive'})); } return; }
             var sep = msg.indexOf('_'); if (sep === -1) return;
