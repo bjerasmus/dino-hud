@@ -140,6 +140,20 @@
         @keyframes victorySlideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.9); } 60% { opacity: 1; transform: translateY(-5px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes victoryPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px #ffd700); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 35px #ffd700) drop-shadow(0 0 70px rgba(255,215,0,0.5)); } }
 
+        /* ═══ HUNT BRIEFING POPUP ═══ */
+        .hunt-briefing { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2500; display: none; align-items: center; justify-content: center; pointer-events: none; }
+        .hunt-briefing.active { display: flex; }
+        .hunt-briefing-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); animation: huntBriefFadeIn 0.5s ease; pointer-events: auto; }
+        .hunt-briefing-content { position: relative; z-index: 1; text-align: center; max-width: 600px; padding: 40px 50px; background: rgba(10, 15, 25, 0.92); border: 2px solid #3efcff; border-radius: 16px; box-shadow: 0 0 30px rgba(62,252,255,0.4), inset 0 0 30px rgba(62,252,255,0.1); backdrop-filter: blur(10px); animation: huntBriefSlideIn 0.8s ease; pointer-events: auto; }
+        .hunt-briefing-icon { font-size: 48px; color: #3efcff; filter: drop-shadow(0 0 15px #3efcff); margin-bottom: 16px; }
+        .hunt-briefing-title { font-family: 'Bungee', cursive; font-size: 32px; color: #3efcff; text-shadow: 0 0 20px rgba(62,252,255,0.7), 0 0 40px rgba(62,252,255,0.3); letter-spacing: 4px; margin-bottom: 16px; }
+        .hunt-briefing-text { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 500; color: rgba(200,220,240,0.9); line-height: 1.8; letter-spacing: 1px; margin-bottom: 24px; }
+        .hunt-briefing-text em { color: #ffd700; font-style: normal; font-weight: 700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .hunt-briefing-skip { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(62,252,255,0.5); cursor: pointer; padding: 8px 20px; border: 1px solid rgba(62,252,255,0.25); border-radius: 6px; background: transparent; transition: all 0.2s; pointer-events: auto; }
+        .hunt-briefing-skip:hover { color: #3efcff; border-color: #3efcff; box-shadow: 0 0 12px rgba(62,252,255,0.3); background: rgba(62,252,255,0.05); }
+        @keyframes huntBriefFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes huntBriefSlideIn { 0% { opacity: 0; transform: translateY(30px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
         .damage-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 998; opacity: 0; }
         .damage-flash.active { animation: dmgFlash 0.6s ease-out forwards; }
         .damage-flash.critical { animation: dmgCrit 0.7s ease-out forwards; }
@@ -342,6 +356,21 @@
         </div>
     </div>
 
+    <!-- ═══ HUNT BRIEFING POPUP ═══ -->
+    <div class="hunt-briefing" id="huntBriefing">
+        <div class="hunt-briefing-backdrop"></div>
+        <div class="hunt-briefing-content">
+            <div class="hunt-briefing-icon">&#x1F3AF;</div>
+            <div class="hunt-briefing-title">THE HUNT BEGINS</div>
+            <div class="hunt-briefing-text">
+                Destroy all <em>IceBorne</em> scattered across the arena.<br>
+                The clock is ticking. Every second counts.<br>
+                <em>Fastest time. Fewest deaths. Ultimate Hunter.</em>
+            </div>
+            <button class="hunt-briefing-skip" id="huntBriefSkip" onclick="dismissHuntBrief()">GOT IT</button>
+        </div>
+    </div>
+
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
         var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 40, huntDone = false;
@@ -410,6 +439,9 @@
         function showPickup(text, color) { pickupFlash.textContent = text; pickupFlash.style.color = color || '#3efcff'; pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff'); pickupFlash.classList.remove('active'); void pickupFlash.offsetWidth; pickupFlash.classList.add('active'); setTimeout(function() { pickupFlash.classList.remove('active'); }, 2000); }
         function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
         function showVictory(timeStr, kills, deaths) { $('victoryTime').textContent = timeStr; $('victoryKills').textContent = kills; $('victoryDeaths').textContent = deaths; var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2); $('victoryKD').textContent = kd; $('victoryScreen').classList.add('active'); }
+        var huntBriefTimer = null;
+        function showHuntBrief() { $('huntBriefing').classList.add('active'); huntBriefTimer = setTimeout(dismissHuntBrief, 6000); }
+        function dismissHuntBrief() { if (huntBriefTimer) { clearTimeout(huntBriefTimer); huntBriefTimer = null; } var el = $('huntBriefing'); if (el) { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; setTimeout(function() { el.classList.remove('active'); el.style.opacity = ''; el.style.transition = ''; }, 500); } }
         function setBoost(on) { if (on) boostInd.classList.add('active'); else boostInd.classList.remove('active'); }
         function startHuntTimer() { huntMode = true; huntStart = Date.now(); huntDone = false; S.timerActive = true; timerPanel.classList.add('active'); if (huntInterval) clearInterval(huntInterval); huntInterval = setInterval(function() { if (huntDone) return; var sec = Math.floor((Date.now() - huntStart) / 1000); var m = Math.floor(sec / 60); var s = sec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.remove('timer-warning'); }, 250); }
 
@@ -520,9 +552,9 @@
             if (msg === 'hide_autostart') { autoCountdownStarted = true; var bs = $('briefingSkip'); if (bs) bs.style.display = 'none'; return; }
             if (msg === 'briefing_skip') { skipBriefing(); return; }
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
-            if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); return; }
-            if (msg === 'cam_tps') { if (typeof PortalsSdk !== 'undefined') PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_tps',TaskTargetState:'SetNotActiveToActive'})); return; }
-            if (msg === 'cam_fps') { if (typeof PortalsSdk !== 'undefined') PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_fps',TaskTargetState:'SetNotActiveToActive'})); return; }
+            if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); setTimeout(showHuntBrief, 1200); return; }
+            if (msg === 'cam_tps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_tps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_tps',TaskTargetState:'SetNotActiveToActive'})); } return; }
+            if (msg === 'cam_fps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_fps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_fps',TaskTargetState:'SetNotActiveToActive'})); } return; }
             var sep = msg.indexOf('_'); if (sep === -1) return;
             var key = msg.substring(0, sep); var val = parseFloat(msg.substring(sep + 1));
             if (key === 'health') console.log('[HUD] health msg:', msg, 'val:', val, 'current:', S.hp);
