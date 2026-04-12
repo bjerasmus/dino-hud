@@ -119,6 +119,27 @@
         .overlay-title { font-size: 56px; font-weight: 900; text-transform: uppercase; letter-spacing: 6px; margin-bottom: 12px; text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
         .overlay-subtitle { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: rgba(62,252,255,0.8); text-shadow: 0 0 10px #3efcff; }
 
+        /* ═══ VICTORY SCREEN ═══ */
+        .victory-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; pointer-events: auto; display: none; align-items: center; justify-content: center; }
+        .victory-screen.active { display: flex; }
+        .victory-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); animation: victoryFadeIn 1.5s ease; }
+        .victory-content { position: relative; z-index: 1; text-align: center; animation: victorySlideIn 1.2s ease; }
+        .victory-icon { font-size: 72px; color: #ffd700; filter: drop-shadow(0 0 25px #ffd700); margin-bottom: 20px; animation: victoryPulse 2s ease-in-out infinite; }
+        .victory-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; animation: victoryFlashAnim 1.5s ease-out forwards; }
+        @keyframes victoryFlashAnim { 0% { background: rgba(255,215,0,0.4); } 100% { background: transparent; } }
+        .victory-title { font-family: 'Bungee', cursive; font-size: 56px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 60px rgba(255,215,0,0.4), 0 0 100px rgba(255,215,0,0.2); letter-spacing: 6px; margin-bottom: 14px; animation: victoryTitleGlow 3s ease-in-out infinite; }
+        @keyframes victoryTitleGlow { 0%, 100% { text-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 60px rgba(255,215,0,0.4); } 50% { text-shadow: 0 0 40px rgba(255,215,0,0.9), 0 0 80px rgba(255,215,0,0.6), 0 0 120px rgba(255,215,0,0.3); } }
+        .victory-subtitle { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #3efcff; text-shadow: 0 0 15px rgba(62,252,255,0.6); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 36px; }
+        .victory-divider { width: 240px; height: 2px; background: linear-gradient(90deg, transparent, #ffd700, transparent); margin: 0 auto 32px; box-shadow: 0 0 12px rgba(255,215,0,0.5); }
+        .victory-stats { display: flex; gap: 44px; justify-content: center; margin-bottom: 36px; }
+        .victory-stat { text-align: center; }
+        .victory-stat-value { font-family: 'Orbitron', sans-serif; font-size: 38px; font-weight: 900; color: white; text-shadow: 0 0 14px #3efcff; }
+        .victory-stat-label { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: rgba(62,252,255,0.6); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+        .victory-quote { font-family: 'Permanent Marker', cursive; font-size: 20px; color: rgba(126,207,255,0.7); font-style: italic; text-shadow: 0 0 12px rgba(74,163,255,0.4); animation: rhymeGlow 3s ease-in-out infinite; }
+        @keyframes victoryFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes victorySlideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.9); } 60% { opacity: 1; transform: translateY(-5px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes victoryPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px #ffd700); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 35px #ffd700) drop-shadow(0 0 70px rgba(255,215,0,0.5)); } }
+
         .damage-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 998; opacity: 0; }
         .damage-flash.active { animation: dmgFlash 0.6s ease-out forwards; }
         .damage-flash.critical { animation: dmgCrit 0.7s ease-out forwards; }
@@ -302,6 +323,25 @@
         </div>
     </div>
 
+    <!-- ═══ VICTORY SCREEN ═══ -->
+    <div class="victory-screen" id="victoryScreen">
+        <div class="victory-flash"></div>
+        <div class="victory-backdrop"></div>
+        <div class="victory-content">
+            <div class="victory-icon">&#x2694;</div>
+            <div class="victory-title">MISSION ACCOMPLISHED</div>
+            <div class="victory-subtitle">THE BATTLE OF THE ICEBORNE IS WON</div>
+            <div class="victory-divider"></div>
+            <div class="victory-stats">
+                <div class="victory-stat"><div class="victory-stat-value" id="victoryTime">0:00</div><div class="victory-stat-label">TIME</div></div>
+                <div class="victory-stat"><div class="victory-stat-value" id="victoryKills">0</div><div class="victory-stat-label">KILLS</div></div>
+                <div class="victory-stat"><div class="victory-stat-value" id="victoryDeaths">0</div><div class="victory-stat-label">DEATHS</div></div>
+                <div class="victory-stat"><div class="victory-stat-value" id="victoryKD">0.00</div><div class="victory-stat-label">K/D RATIO</div></div>
+            </div>
+            <div class="victory-quote">Sleep now child, lest Koldhart get you...</div>
+        </div>
+    </div>
+
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
         var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 40, huntDone = false;
@@ -369,6 +409,7 @@
         function flashHit() { crosshair.classList.add('hit'); setTimeout(function() { crosshair.classList.remove('hit'); }, 180); }
         function showPickup(text, color) { pickupFlash.textContent = text; pickupFlash.style.color = color || '#3efcff'; pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff'); pickupFlash.classList.remove('active'); void pickupFlash.offsetWidth; pickupFlash.classList.add('active'); setTimeout(function() { pickupFlash.classList.remove('active'); }, 2000); }
         function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
+        function showVictory(timeStr, kills, deaths) { $('victoryTime').textContent = timeStr; $('victoryKills').textContent = kills; $('victoryDeaths').textContent = deaths; var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2); $('victoryKD').textContent = kd; $('victoryScreen').classList.add('active'); }
         function setBoost(on) { if (on) boostInd.classList.add('active'); else boostInd.classList.remove('active'); }
         function startHuntTimer() { huntMode = true; huntStart = Date.now(); huntDone = false; S.timerActive = true; timerPanel.classList.add('active'); if (huntInterval) clearInterval(huntInterval); huntInterval = setInterval(function() { if (huntDone) return; var sec = Math.floor((Date.now() - huntStart) / 1000); var m = Math.floor(sec / 60); var s = sec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.remove('timer-warning'); }, 250); }
 
@@ -476,6 +517,7 @@
             if (msg.indexOf('pickup_') === 0) { var rest = msg.substring(7); var idx = rest.lastIndexOf('_'); if (idx > 0) showPickup(rest.substring(0, idx).replace(/_/g, ' '), rest.substring(idx + 1)); else showPickup(rest.replace(/_/g, ' '), '#3efcff'); return; }
             if (msg === 'hit_1') { flashHit(); return; }
             if (msg === 'toggle_1') { toggleHud(); return; }
+            if (msg === 'hide_autostart') { autoCountdownStarted = true; var bs = $('briefingSkip'); if (bs) bs.style.display = 'none'; return; }
             if (msg === 'briefing_skip') { skipBriefing(); return; }
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
             if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); return; }
@@ -487,7 +529,7 @@
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showOverlay('HUNT COMPLETE', tStr + ' \u2014 ' + S.deaths + ' DEATHS', '#ffd700', 8000); } break;
+                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
                 case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
