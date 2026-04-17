@@ -144,6 +144,7 @@
         .lb-table tr.lb-current td { color: #3efcff; text-shadow: 0 0 8px rgba(62,252,255,0.4); }
         .lb-table tr.lb-gold td { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
         .lb-table td:first-child { color: rgba(255,215,0,0.6); font-size: 11px; }
+        .lb-table td:nth-child(2) { font-size: 11px; letter-spacing: 1px; text-align: left; }
         .lb-empty { font-size: 10px; color: rgba(200,200,200,0.3); letter-spacing: 2px; margin-top: 8px; display: none; }
         .hunt-again-btn { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; color: #000; background: linear-gradient(135deg, #3efcff, #00bcd4); border: none; border-radius: 8px; padding: 16px 48px; margin-top: 28px; cursor: pointer; pointer-events: auto; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(62,252,255,0.5), 0 4px 15px rgba(0,0,0,0.3); }
         .hunt-again-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(62,252,255,0.8), 0 6px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #6fffff, #26c6da); }
@@ -366,7 +367,7 @@
             <div class="lb-section">
                 <div class="lb-title">LEADERBOARD — TOP 10</div>
                 <table class="lb-table" id="lbTable">
-                    <thead><tr><th>#</th><th>DEATHS</th><th>TIME</th><th>DATE</th></tr></thead>
+                    <thead><tr><th>#</th><th>PLAYER</th><th>DEATHS</th><th>TIME</th><th>DATE</th></tr></thead>
                     <tbody id="lbBody"></tbody>
                 </table>
                 <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
@@ -477,7 +478,8 @@
         function saveRun(deaths, timeSec, timeStr) {
             try {
                 var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
-                runs.push({ deaths: deaths, time: timeSec, timeStr: timeStr, date: new Date().toLocaleDateString() });
+                var name = mmMyName || 'Unknown';
+                runs.push({ name: name, deaths: deaths, time: timeSec, timeStr: timeStr, date: new Date().toLocaleDateString() });
                 runs.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
                 if (runs.length > 10) runs = runs.slice(0, 10);
                 localStorage.setItem('dino_hunt_lb', JSON.stringify(runs));
@@ -498,7 +500,8 @@
                     if (isCurrent) { tr.className = 'lb-current'; matched = true; }
                     if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
                     var m = Math.floor(r.time / 60); var s = r.time % 60;
-                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.date || '-') + '</td>';
+                    var displayName = (r.name || 'Unknown').length > 12 ? (r.name || 'Unknown').substring(0, 12) + '..' : (r.name || 'Unknown');
+                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.date || '-') + '</td>';
                     body.appendChild(tr);
                 }
             } catch (e) {}
