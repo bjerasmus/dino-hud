@@ -343,8 +343,8 @@
         <div class="victory-backdrop"></div>
         <div class="victory-content">
             <div class="victory-icon">&#x2694;</div>
-            <div class="victory-title">MISSION ACCOMPLISHED</div>
-            <div class="victory-subtitle">THE BATTLE OF THE ICEBORNE IS WON</div>
+            <div class="victory-title">HUNT COMPLETE</div>
+            <div class="victory-subtitle">46/46 — THE BATTLE OF THE ICEBORNE IS WON</div>
             <div class="victory-divider"></div>
             <div class="victory-stats">
                 <div class="victory-stat"><div class="victory-stat-value" id="victoryTime">0:00</div><div class="victory-stat-label">TIME</div></div>
@@ -363,9 +363,9 @@
             <div class="hunt-briefing-icon">&#x1F3AF;</div>
             <div class="hunt-briefing-title">THE HUNT BEGINS</div>
             <div class="hunt-briefing-text">
-                Destroy all <em>IceBorne</em> scattered across the arena.<br>
+                Destroy all <em>46 IceBorne</em> scattered across the arena.<br>
                 The clock is ticking. Every second counts.<br>
-                <em>Fastest time. Fewest deaths. Ultimate Hunter.</em>
+                <em>Fewest deaths. Fastest time. Ultimate Hunter.</em>
             </div>
             <button class="hunt-briefing-skip" id="huntBriefSkip" onclick="dismissHuntBrief()">GOT IT</button>
         </div>
@@ -373,7 +373,7 @@
 
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
-        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 40, huntDone = false;
+        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 46, huntDone = false;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
         var armorBar = $('armorBar'), armorText = $('armorText');
@@ -429,7 +429,7 @@
         function updateArmor(val) { S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); }
         function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
         function updateAmmo(clip, reserve) { S.clip = Math.max(0, clip); S.reserve = Math.max(0, reserve); if (S.weapon === 'none') return; ammoDisp.textContent = S.clip + ' / ' + S.reserve; ammoDisp.className = 'ammo-display'; if (S.clip === 0) ammoDisp.classList.add('ammo-empty'); else if (S.clip <= 3) ammoDisp.classList.add('ammo-low'); }
-        function updateScore() { killsVal.textContent = S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
+        function updateScore() { killsVal.textContent = huntMode ? S.kills + '/' + huntTarget : S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
         function updateStreak() { var label = ''; for (var i = 0; i < STREAKS.length; i++) { if (S.streak >= STREAKS[i][0]) { label = STREAKS[i][1]; break; } } if (label) { streakBadge.textContent = label; streakBadge.classList.add('active'); } else { streakBadge.classList.remove('active'); } }
         function checkStreakMilestone() { for (var i = 0; i < STREAKS.length; i++) { if (S.streak === STREAKS[i][0]) { streakText.textContent = STREAKS[i][1]; streakAnnounce.classList.remove('active'); void streakAnnounce.offsetWidth; streakAnnounce.classList.add('active'); setTimeout(function() { streakAnnounce.classList.remove('active'); }, 2500); break; } } }
         function updateTimer(sec) { S.timerSec = Math.max(0, sec); if (!S.timerActive) { S.timerActive = true; timerPanel.classList.add('active'); } var m = Math.floor(S.timerSec / 60); var s = S.timerSec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.toggle('timer-warning', S.timerSec < 30 && S.timerSec > 0); }
@@ -438,7 +438,22 @@
         function flashHit() { crosshair.classList.add('hit'); setTimeout(function() { crosshair.classList.remove('hit'); }, 180); }
         function showPickup(text, color) { pickupFlash.textContent = text; pickupFlash.style.color = color || '#3efcff'; pickupFlash.style.textShadow = '0 0 15px ' + (color || '#3efcff'); pickupFlash.classList.remove('active'); void pickupFlash.offsetWidth; pickupFlash.classList.add('active'); setTimeout(function() { pickupFlash.classList.remove('active'); }, 2000); }
         function showOverlay(title, sub, color, dur) { overlayTitle.textContent = title; overlayTitle.style.color = color || '#3efcff'; overlaySub.textContent = sub || ''; gameOverlay.classList.add('active'); setTimeout(function() { gameOverlay.classList.remove('active'); }, dur || 3000); }
-        function showVictory(timeStr, kills, deaths) { $('victoryTime').textContent = timeStr; $('victoryKills').textContent = kills; $('victoryDeaths').textContent = deaths; var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2); $('victoryKD').textContent = kd; $('victoryScreen').classList.add('active'); }
+        function showVictory(timeStr, kills, deaths) {
+            $('victoryTime').textContent = timeStr;
+            $('victoryKills').textContent = kills + '/' + huntTarget;
+            $('victoryDeaths').textContent = deaths;
+            var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
+            $('victoryKD').textContent = kd;
+            $('victoryScreen').classList.add('active');
+            // Post composite score: fewer deaths >> faster time
+            // Score = (1000 - deaths) * 100000 + (99999 - seconds)
+            var sec = Math.floor((Date.now() - huntStart) / 1000);
+            var score = (1000 - deaths) * 100000 + Math.max(0, 99999 - sec);
+            if (typeof PortalsSdk !== 'undefined') {
+                PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
+                PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
+            }
+        }
         var huntBriefTimer = null;
         function showHuntBrief() { $('huntBriefing').classList.add('active'); huntBriefTimer = setTimeout(dismissHuntBrief, 6000); }
         function dismissHuntBrief() { if (huntBriefTimer) { clearTimeout(huntBriefTimer); huntBriefTimer = null; } var el = $('huntBriefing'); if (el) { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; setTimeout(function() { el.classList.remove('active'); el.style.opacity = ''; el.style.transition = ''; }, 500); } }
