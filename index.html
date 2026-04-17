@@ -136,8 +136,15 @@
         .victory-stat-value { font-family: 'Orbitron', sans-serif; font-size: 38px; font-weight: 900; color: white; text-shadow: 0 0 14px #3efcff; }
         .victory-stat-label { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: rgba(62,252,255,0.6); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
         .victory-quote { font-family: 'Permanent Marker', cursive; font-size: 20px; color: rgba(126,207,255,0.7); font-style: italic; text-shadow: 0 0 12px rgba(74,163,255,0.4); animation: rhymeGlow 3s ease-in-out infinite; }
-        .victory-score { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); letter-spacing: 3px; margin-top: 20px; }
-        .victory-score-note { font-family: 'Orbitron', sans-serif; font-size: 9px; color: rgba(200,200,200,0.5); letter-spacing: 2px; margin-top: 4px; }
+        .lb-section { margin-top: 28px; }
+        .lb-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: #ffd700; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .lb-table { width: 100%; max-width: 420px; margin: 0 auto; border-collapse: collapse; font-family: 'Orbitron', sans-serif; }
+        .lb-table th { font-size: 8px; font-weight: 700; color: rgba(62,252,255,0.5); letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px 8px; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .lb-table td { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); padding: 6px 10px; border-bottom: 1px solid rgba(62,252,255,0.08); }
+        .lb-table tr.lb-current td { color: #3efcff; text-shadow: 0 0 8px rgba(62,252,255,0.4); }
+        .lb-table tr.lb-gold td { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .lb-table td:first-child { color: rgba(255,215,0,0.6); font-size: 11px; }
+        .lb-empty { font-size: 10px; color: rgba(200,200,200,0.3); letter-spacing: 2px; margin-top: 8px; display: none; }
         .hunt-again-btn { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; color: #000; background: linear-gradient(135deg, #3efcff, #00bcd4); border: none; border-radius: 8px; padding: 16px 48px; margin-top: 28px; cursor: pointer; pointer-events: auto; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(62,252,255,0.5), 0 4px 15px rgba(0,0,0,0.3); }
         .hunt-again-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(62,252,255,0.8), 0 6px 20px rgba(0,0,0,0.4); background: linear-gradient(135deg, #6fffff, #26c6da); }
         @keyframes victoryFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -356,9 +363,14 @@
                 <div class="victory-stat"><div class="victory-stat-value" id="victoryDeaths">0</div><div class="victory-stat-label">DEATHS</div></div>
                 <div class="victory-stat"><div class="victory-stat-value" id="victoryKD">0.00</div><div class="victory-stat-label">K/D RATIO</div></div>
             </div>
-            <div class="victory-score" id="victoryScore">SCORE: 0</div>
-            <div class="victory-score-note">FEWER DEATHS = HIGHER SCORE</div>
-            <div class="victory-quote">Sleep now child, lest Koldhart get you...</div>
+            <div class="lb-section">
+                <div class="lb-title">LEADERBOARD — TOP 10</div>
+                <table class="lb-table" id="lbTable">
+                    <thead><tr><th>#</th><th>DEATHS</th><th>TIME</th><th>DATE</th></tr></thead>
+                    <tbody id="lbBody"></tbody>
+                </table>
+                <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
+            </div>
             <button class="hunt-again-btn" id="huntAgainBtn" onclick="restartHunt()">HUNT AGAIN</button>
         </div>
     </div>
@@ -451,14 +463,45 @@
             $('victoryDeaths').textContent = deaths;
             var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
             $('victoryKD').textContent = kd;
-            var score = (1000 - deaths) * 100000;
-            $('victoryScore').textContent = 'SCORE: ' + score.toLocaleString();
+            // Save run to localStorage leaderboard
+            var timeSec = huntStart ? Math.floor((Date.now() - huntStart) / 1000) : 0;
+            saveRun(deaths, timeSec, timeStr);
+            renderLeaderboard(deaths, timeSec);
             $('victoryScreen').classList.add('active');
             // Fire hunt_complete quest → room-side computes & posts score to leaderboard
             if (typeof PortalsSdk !== 'undefined') {
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
             }
+        }
+        function saveRun(deaths, timeSec, timeStr) {
+            try {
+                var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
+                runs.push({ deaths: deaths, time: timeSec, timeStr: timeStr, date: new Date().toLocaleDateString() });
+                runs.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
+                if (runs.length > 10) runs = runs.slice(0, 10);
+                localStorage.setItem('dino_hunt_lb', JSON.stringify(runs));
+            } catch (e) {}
+        }
+        function renderLeaderboard(curDeaths, curTime) {
+            try {
+                var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
+                var body = $('lbBody');
+                body.innerHTML = '';
+                if (runs.length === 0) { $('lbEmpty').style.display = 'block'; $('lbTable').style.display = 'none'; return; }
+                $('lbEmpty').style.display = 'none'; $('lbTable').style.display = 'table';
+                var matched = false;
+                for (var i = 0; i < runs.length; i++) {
+                    var r = runs[i];
+                    var tr = document.createElement('tr');
+                    var isCurrent = !matched && r.deaths === curDeaths && r.time === curTime;
+                    if (isCurrent) { tr.className = 'lb-current'; matched = true; }
+                    if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
+                    var m = Math.floor(r.time / 60); var s = r.time % 60;
+                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.date || '-') + '</td>';
+                    body.appendChild(tr);
+                }
+            } catch (e) {}
         }
         function restartHunt() {
             // Teleport to same room = full restart (NPCs respawn, timer resets)
