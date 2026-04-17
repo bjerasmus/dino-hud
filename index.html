@@ -450,19 +450,32 @@
         var mmCanvas = $('minimapCanvas'), mmCtx = mmCanvas.getContext('2d');
         var mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
         var mmAllPos = {}, mmAllRot = {};
-        // Static NPC positions [x, z] from room data (40 NPCs, updated v149)
+        // Static NPC positions [x, z] from room data (46 NPCs, updated v150)
         var NPC_POS = [
             [-172.9,-153.2],[-282.6,-137.7],[-78.5,45.5],[-155.8,-103.7],
             [-199.3,-53.6],[-229.9,-110.5],[-59.0,20.4],[-176.0,-73.4],
-            [-214.1,13.2],[-230.8,-191.3],[-253.5,-189.5],[75.7,68.3],
-            [-191.1,-11.4],[-134.6,-65.8],[-227.1,-153.1],[-251.8,-163.1],
-            [-166.1,-27.6],[34.3,125.2],[-211.7,-30.0],[-137.8,-101.2],
-            [-256.1,-11.3],[-227.0,-88.4],[-193.7,-132.2],[-309.9,-111.3],
-            [-240.8,-52.9],[-243.5,-189.3],[-311.5,-28.9],[-137.1,-137.3],
-            [-89.2,74.7],[-91.5,44.2],[-258.3,-112.5],[-347.3,-118.2],
+            [-214.1,13.2],[-320,-160],[-253.5,-189.5],[-130.1,-14.0],
+            [-191.1,-11.4],[-134.6,-65.8],[-200,-165],[3.6,-8.2],
+            [-166.1,-27.6],[-13.4,49.4],[-211.7,-30.0],[-137.8,-101.2],
+            [-256.1,-11.3],[-227.0,-88.4],[-193.7,-132.2],[-280,-75],
+            [-240.8,-52.9],[-230,-175],[-300,-45],[-137.1,-137.3],
+            [-89.2,74.7],[-91.5,44.2],[-258.3,-112.5],[-335,-135],
             [-243.2,-139.4],[-206.7,-19.9],[-164.6,-20.0],[-303.1,-91.2],
-            [-270.9,-63.3],[-262.7,-21.3],[-198.7,-209.7],[-257.5,-222.8]
+            [-270.9,-63.3],[-262.7,-21.3],[-160,-148],[-245,-155],
+            [-270,-100],[16.8,-0.8],[-1.1,-1.2],[-185,-15],
+            [-215,-85],[-137.1,-137.3]
         ];
+        // Remove nearest NPC dot when a kill happens
+        function removeNearestNPC() {
+            if (NPC_POS.length === 0) return;
+            var best = -1, bestD = Infinity;
+            for (var i = 0; i < NPC_POS.length; i++) {
+                var dx = NPC_POS[i][0] - mmPX; var dz = NPC_POS[i][1] - mmPZ;
+                var d = dx * dx + dz * dz;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            if (best >= 0) NPC_POS.splice(best, 1);
+        }
         var mmReady = false, mmDX = 0, mmDZ = 0, mmDR = 0;
         function mmLerp(a, b, t) { return a + (b - a) * t; }
         function mmLerpA(a, b, t) { var d = b - a; while (d > 180) d -= 360; while (d < -180) d += 360; return a + d * t; }
@@ -562,7 +575,7 @@
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) addKillFeed(); if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
+                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { addKillFeed(); removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
                 case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
