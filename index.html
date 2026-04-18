@@ -367,7 +367,7 @@
             <div class="lb-section">
                 <div class="lb-title">LEADERBOARD — TOP 10</div>
                 <table class="lb-table" id="lbTable">
-                    <thead><tr><th>#</th><th>PLAYER</th><th>DEATHS</th><th>TIME</th><th>DATE</th></tr></thead>
+                    <thead><tr><th>#</th><th>PLAYER</th><th>DEATHS</th><th>TIME</th><th>STREAK</th><th>DATE</th></tr></thead>
                     <tbody id="lbBody"></tbody>
                 </table>
                 <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
@@ -392,7 +392,7 @@
     </div>
 
     <script>
-        var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
+        var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, maxStreak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
         var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 46, huntDone = false;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
@@ -466,7 +466,7 @@
             $('victoryKD').textContent = kd;
             // Save run to localStorage leaderboard
             var timeSec = huntStart ? Math.floor((Date.now() - huntStart) / 1000) : 0;
-            saveRun(deaths, timeSec, timeStr);
+            saveRun(deaths, timeSec, timeStr, S.maxStreak);
             renderLeaderboard(deaths, timeSec);
             $('victoryScreen').classList.add('active');
             // Fire hunt_complete quest → room-side computes & posts score to leaderboard
@@ -475,11 +475,11 @@
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
             }
         }
-        function saveRun(deaths, timeSec, timeStr) {
+        function saveRun(deaths, timeSec, timeStr, maxStreak) {
             try {
                 var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
                 var name = mmMyName || 'Unknown';
-                runs.push({ name: name, deaths: deaths, time: timeSec, timeStr: timeStr, date: new Date().toLocaleDateString() });
+                runs.push({ name: name, deaths: deaths, time: timeSec, timeStr: timeStr, streak: maxStreak || 0, date: new Date().toLocaleDateString() });
                 runs.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
                 if (runs.length > 10) runs = runs.slice(0, 10);
                 localStorage.setItem('dino_hunt_lb', JSON.stringify(runs));
@@ -501,7 +501,7 @@
                     if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
                     var m = Math.floor(r.time / 60); var s = r.time % 60;
                     var displayName = (r.name || 'Unknown').length > 12 ? (r.name || 'Unknown').substring(0, 12) + '..' : (r.name || 'Unknown');
-                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.date || '-') + '</td>';
+                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.streak || 0) + '</td><td>' + (r.date || '-') + '</td>';
                     body.appendChild(tr);
                 }
             } catch (e) {}
@@ -649,7 +649,7 @@
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill': S.kills = val; S.streak++; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { addKillFeed(); removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
+                case 'kill': S.kills = val; S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { addKillFeed(); removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
                 case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
