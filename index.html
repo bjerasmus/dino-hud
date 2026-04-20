@@ -651,7 +651,7 @@
             switch (key) {
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
-                case 'kill': S.kills = val; S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { addKillFeed(); removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
+                case 'kill': S.kills = val; S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
                 case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
