@@ -443,10 +443,12 @@
                 // Healing — snap lag bar to match
                 damageLagBar.style.transition = 'none';
                 damageLagBar.style.width = S.hp + '%';
+                var gained = Math.round(S.hp - old);
+                if (gained >= 5) showPickup('+' + gained + ' HP', '#00ff88');
             }
             healthBar.classList.toggle('pulse-red', S.hp > 0 && S.hp < 25);
         }
-        function updateArmor(val) { S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); }
+        function updateArmor(val) { var old = S.armor; S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); if (S.armor > old) { var gained = Math.round(S.armor - old); if (gained >= 5) showPickup('+' + gained + ' ARMOR', '#4aa3ff'); } }
         function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
         function updateAmmo(clip, reserve) { S.clip = Math.max(0, clip); S.reserve = Math.max(0, reserve); if (S.weapon === 'none') return; ammoDisp.textContent = S.clip + ' / ' + S.reserve; ammoDisp.className = 'ammo-display'; if (S.clip === 0) ammoDisp.classList.add('ammo-empty'); else if (S.clip <= 3) ammoDisp.classList.add('ammo-low'); }
         function updateScore() { killsVal.textContent = huntMode ? S.kills + '/' + huntTarget : S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
