@@ -54,10 +54,10 @@
         @keyframes boostPulse { 0%,100% { box-shadow: 0 0 12px #ffd700; } 50% { box-shadow: 0 0 24px #ffd700; } }
 
         .weapon-panel { position: absolute; bottom: 30px; right: 30px; width: 240px; text-align: center; }
-        .weapon-icon { width: 160px; height: 80px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+        .weapon-icon { width: 200px; height: 100px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
         .weapon-icon img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px #3efcff); }
         .weapon-svg { fill: #3efcff; filter: drop-shadow(0 0 8px #3efcff); }
-        .weapon-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 0 8px #3efcff; }
+        .weapon-name { display: none; }
         .ammo-display { font-size: 30px; font-weight: 900; color: white; text-shadow: 0 0 10px #3efcff; letter-spacing: 2px; }
         .ammo-low { color: #ffaa00; text-shadow: 0 0 10px #ffaa00; }
         .ammo-empty { color: #ff3333; text-shadow: 0 0 10px #ff3333; animation: pulseRed 0.8s ease-in-out infinite; }
@@ -410,9 +410,9 @@
 
         var WEAPON_IMG = {
             none: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="35" y="25" width="50" height="10" rx="2"/><circle cx="32" cy="30" r="8"/></svg>',
-            pistol: '<img src="pistol.png" alt="Pistol">',
-            rifle: '<img src="rifle.png" alt="Rifle">',
-            shotgun: '<img src="shotgun.png" alt="Shotgun">'
+            pistol: '<img src="pistol.png">',
+            rifle: '<img src="rifle.png">',
+            shotgun: '<img src="shotgun.png">'
         };
         var STREAKS = [[15,'GODLIKE'],[10,'UNSTOPPABLE'],[7,'RAMPAGE'],[5,'KILLING SPREE'],[3,'TRIPLE KILL']];
 
