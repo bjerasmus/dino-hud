@@ -54,8 +54,8 @@
         @keyframes boostPulse { 0%,100% { box-shadow: 0 0 12px #ffd700; } 50% { box-shadow: 0 0 24px #ffd700; } }
 
         .weapon-panel { position: absolute; bottom: 30px; right: 30px; width: 240px; text-align: center; }
-        .weapon-icon { width: 200px; height: 100px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
-        .weapon-icon img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px #3efcff); }
+        .weapon-icon { width: 120px; height: 60px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+        .weapon-icon img { width: 150px; height: 75px; object-fit: contain; filter: drop-shadow(0 0 8px #3efcff); }
         .weapon-svg { fill: #3efcff; filter: drop-shadow(0 0 8px #3efcff); }
         .weapon-name { display: none; }
         .ammo-display { font-size: 30px; font-weight: 900; color: white; text-shadow: 0 0 10px #3efcff; letter-spacing: 2px; }
@@ -410,9 +410,9 @@
 
         var WEAPON_IMG = {
             none: '<svg class="weapon-svg" viewBox="0 0 120 60"><rect x="35" y="25" width="50" height="10" rx="2"/><circle cx="32" cy="30" r="8"/></svg>',
-            pistol: '<img src="pistol.png">',
-            rifle: '<img src="rifle.png">',
-            shotgun: '<img src="shotgun.png">'
+            pistol: '<img src="https://bjerasmus.github.io/dino-hud/pistol.png" alt="">',
+            rifle: '<img src="https://bjerasmus.github.io/dino-hud/rifle.png" alt="">',
+            shotgun: '<img src="https://bjerasmus.github.io/dino-hud/shotgun.png" alt="">'
         };
         var STREAKS = [[15,'GODLIKE'],[10,'UNSTOPPABLE'],[7,'RAMPAGE'],[5,'KILLING SPREE'],[3,'TRIPLE KILL']];
 
