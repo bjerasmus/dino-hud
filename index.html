@@ -510,11 +510,17 @@
             vs.classList.add('active');
             vs.classList.add('game-over');
         }
+        function getPlayerName() {
+            if (mmMyName) return mmMyName;
+            try { if (typeof PortalsSdk !== 'undefined' && PortalsSdk.myName) return PortalsSdk.myName; } catch(e) {}
+            try { if (typeof PortalsSdk !== 'undefined' && PortalsSdk.getMyName) return PortalsSdk.getMyName(); } catch(e) {}
+            return 'Unknown';
+        }
         function saveRun(deaths, timeSec, timeStr, maxStreak) {
             try {
                 var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
-                var name = mmMyName || 'Unknown';
-                runs.push({ name: name, deaths: deaths, time: timeSec, timeStr: timeStr, streak: maxStreak || 0, date: new Date().toLocaleDateString() });
+                var name = getPlayerName();
+                runs.push({ name: name, kills: S.kills, deaths: deaths, time: timeSec, timeStr: timeStr, streak: maxStreak || 0, date: new Date().toLocaleDateString() });
                 runs.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
                 if (runs.length > 10) runs = runs.slice(0, 10);
                 localStorage.setItem('dino_hunt_lb', JSON.stringify(runs));
@@ -546,16 +552,24 @@
             var vs = $('victoryScreen');
             vs.classList.remove('active');
             vs.classList.remove('game-over');
-            // Reset state
-            huntDone = false; S.kills = 0; S.deaths = 0; S.streak = 0; S.maxStreak = 0;
+            // Restore victory screen defaults (undo game-over overrides)
+            vs.querySelector('.victory-icon').innerHTML = '&#x1F3C6;';
+            vs.querySelector('.victory-title').textContent = 'HUNT COMPLETE';
+            vs.querySelector('.victory-subtitle').textContent = '';
+            // Reset HUD state
+            huntDone = false;
+            S.kills = 0; S.deaths = 0; S.streak = 0; S.maxStreak = 0;
             updateScore(); updateStreak();
-            // Fire room-side restart tasks
-            if (typeof PortalsSdk !== 'undefined') {
-                PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
-                PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
-            }
-            // Reload page for clean state (NPCs, timer, radar)
-            setTimeout(function() { window.location.reload(); }, 500);
+            // Reset health/armor display
+            updateHealth(100); updateArmor(0);
+            // Reset timer display style
+            timerDisp.style.color = ''; timerDisp.style.textShadow = '';
+            timerDisp.classList.remove('timer-warning');
+            // Restore all NPC radar dots
+            NPC_POS.length = 0;
+            for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1]]);
+            // Restart hunt timer
+            startHuntTimer();
         }
         var huntBriefTimer = null;
         function showHuntBrief() { $('huntBriefing').classList.add('active'); huntBriefTimer = setTimeout(dismissHuntBrief, 6000); }
@@ -585,6 +599,9 @@
             [-89.2,74.7],[-78.5,45.5],[-59,20.4],[-13.4,49.4],
             [-1.1,-1.2],[3.6,-8.2],[16.8,-0.8]
         ];
+        // Keep pristine copy for restart
+        var NPC_POS_ORIG = [];
+        for (var npi = 0; npi < NPC_POS.length; npi++) NPC_POS_ORIG.push([NPC_POS[npi][0], NPC_POS[npi][1]]);
         // Remove nearest NPC dot when a kill happens
         function removeNearestNPC() {
             if (NPC_POS.length === 0) return;
