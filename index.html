@@ -510,69 +510,70 @@
             vs.classList.add('active');
             vs.classList.add('game-over');
         }
+        // In-memory leaderboard (localStorage blocked in cross-origin iframes)
+        var lbRuns = [];
+        function lbLoad() { try { var s = localStorage.getItem('dino_hunt_lb'); if (s) lbRuns = JSON.parse(s); } catch(e) {} }
+        function lbSave() { try { localStorage.setItem('dino_hunt_lb', JSON.stringify(lbRuns)); } catch(e) {} }
+        lbLoad();
         function getPlayerName() {
             if (mmMyName) return mmMyName;
             try { if (typeof PortalsSdk !== 'undefined' && PortalsSdk.myName) return PortalsSdk.myName; } catch(e) {}
             try { if (typeof PortalsSdk !== 'undefined' && PortalsSdk.getMyName) return PortalsSdk.getMyName(); } catch(e) {}
-            return 'Unknown';
+            return 'Hunter';
         }
         function saveRun(deaths, timeSec, timeStr, maxStreak) {
-            try {
-                var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
-                var name = getPlayerName();
-                runs.push({ name: name, kills: S.kills, deaths: deaths, time: timeSec, timeStr: timeStr, streak: maxStreak || 0, date: new Date().toLocaleDateString() });
-                runs.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
-                if (runs.length > 10) runs = runs.slice(0, 10);
-                localStorage.setItem('dino_hunt_lb', JSON.stringify(runs));
-            } catch (e) {}
+            var name = getPlayerName();
+            lbRuns.push({ name: name, kills: S.kills, deaths: deaths, time: timeSec, timeStr: timeStr, streak: maxStreak || 0, date: new Date().toLocaleDateString() });
+            lbRuns.sort(function(a, b) { return a.deaths !== b.deaths ? a.deaths - b.deaths : a.time - b.time; });
+            if (lbRuns.length > 10) lbRuns = lbRuns.slice(0, 10);
+            lbSave();
         }
         function renderLeaderboard(curDeaths, curTime) {
-            try {
-                var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
-                var body = $('lbBody');
-                body.innerHTML = '';
-                if (runs.length === 0) { $('lbEmpty').style.display = 'block'; $('lbTable').style.display = 'none'; return; }
-                $('lbEmpty').style.display = 'none'; $('lbTable').style.display = 'table';
-                var matched = false;
-                for (var i = 0; i < runs.length; i++) {
-                    var r = runs[i];
-                    var tr = document.createElement('tr');
-                    var isCurrent = !matched && r.deaths === curDeaths && r.time === curTime;
-                    if (isCurrent) { tr.className = 'lb-current'; matched = true; }
-                    if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
-                    var m = Math.floor(r.time / 60); var s = r.time % 60;
-                    var kills = r.kills || 0;
-                    var deaths = r.deaths || 0;
-                    var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
-                    var displayName = (r.name || 'Unknown').length > 12 ? (r.name || 'Unknown').substring(0, 12) + '..' : (r.name || 'Unknown');
-                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + kills + '</td><td>' + deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + kd + '</td><td>' + (r.streak || 0) + '</td><td>' + (r.date || '-') + '</td>';
-                    body.appendChild(tr);
-                }
-            } catch (e) {}
+            var body = $('lbBody');
+            body.innerHTML = '';
+            if (lbRuns.length === 0) { $('lbEmpty').style.display = 'block'; $('lbTable').style.display = 'none'; return; }
+            $('lbEmpty').style.display = 'none'; $('lbTable').style.display = 'table';
+            var matched = false;
+            for (var i = 0; i < lbRuns.length; i++) {
+                var r = lbRuns[i];
+                var tr = document.createElement('tr');
+                var isCurrent = !matched && r.deaths === curDeaths && r.time === curTime;
+                if (isCurrent) { tr.className = 'lb-current'; matched = true; }
+                if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
+                var m = Math.floor(r.time / 60); var s = r.time % 60;
+                var kills = r.kills || 0;
+                var deaths = r.deaths || 0;
+                var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
+                var displayName = (r.name || 'Hunter').length > 12 ? (r.name || 'Hunter').substring(0, 12) + '..' : (r.name || 'Hunter');
+                tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + kills + '</td><td>' + deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + kd + '</td><td>' + (r.streak || 0) + '</td><td>' + (r.date || '-') + '</td>';
+                body.appendChild(tr);
+            }
         }
         function restartHunt() {
-            // Hide victory/game-over screen
-            var vs = $('victoryScreen');
-            vs.classList.remove('active');
-            vs.classList.remove('game-over');
-            // Restore victory screen defaults (undo game-over overrides)
-            vs.querySelector('.victory-icon').innerHTML = '&#x1F3C6;';
-            vs.querySelector('.victory-title').textContent = 'HUNT COMPLETE';
-            vs.querySelector('.victory-subtitle').textContent = '';
-            // Reset HUD state
-            huntDone = false;
-            S.kills = 0; S.deaths = 0; S.streak = 0; S.maxStreak = 0;
-            updateScore(); updateStreak();
-            // Reset health/armor display
-            updateHealth(100); updateArmor(0);
-            // Reset timer display style
-            timerDisp.style.color = ''; timerDisp.style.textShadow = '';
-            timerDisp.classList.remove('timer-warning');
-            // Restore all NPC radar dots
-            NPC_POS.length = 0;
-            for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1]]);
-            // Restart hunt timer
-            startHuntTimer();
+            try {
+                // Hide victory/game-over screen
+                var vs = $('victoryScreen');
+                vs.classList.remove('active');
+                vs.classList.remove('game-over');
+                // Restore victory screen defaults (undo game-over overrides)
+                vs.querySelector('.victory-icon').innerHTML = '&#x1F3C6;';
+                vs.querySelector('.victory-title').textContent = 'HUNT COMPLETE';
+                vs.querySelector('.victory-subtitle').textContent = '';
+                // Reset HUD state
+                huntDone = false;
+                S.kills = 0; S.deaths = 0; S.streak = 0; S.maxStreak = 0;
+                updateScore(); updateStreak();
+                // Reset health/armor display
+                updateHealth(100); updateArmor(0);
+                // Reset timer display style
+                timerDisp.style.color = ''; timerDisp.style.textShadow = '';
+                timerDisp.classList.remove('timer-warning');
+                // Restore all NPC radar dots
+                NPC_POS.length = 0;
+                for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1]]);
+                // Restart hunt timer
+                startHuntTimer();
+            } catch(e) { console.error('[HUD] restartHunt error:', e); }
         }
         var huntBriefTimer = null;
         function showHuntBrief() { $('huntBriefing').classList.add('active'); huntBriefTimer = setTimeout(dismissHuntBrief, 6000); }
