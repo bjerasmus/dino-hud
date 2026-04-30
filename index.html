@@ -138,9 +138,9 @@
         .victory-quote { font-family: 'Permanent Marker', cursive; font-size: 20px; color: rgba(126,207,255,0.7); font-style: italic; text-shadow: 0 0 12px rgba(74,163,255,0.4); animation: rhymeGlow 3s ease-in-out infinite; }
         .lb-section { margin-top: 28px; }
         .lb-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: #ffd700; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
-        .lb-table { width: 100%; max-width: 420px; margin: 0 auto; border-collapse: collapse; font-family: 'Orbitron', sans-serif; }
-        .lb-table th { font-size: 8px; font-weight: 700; color: rgba(62,252,255,0.5); letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px 8px; border-bottom: 1px solid rgba(255,215,0,0.2); }
-        .lb-table td { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); padding: 6px 10px; border-bottom: 1px solid rgba(62,252,255,0.08); }
+        .lb-table { width: 100%; max-width: 520px; margin: 0 auto; border-collapse: collapse; font-family: 'Orbitron', sans-serif; }
+        .lb-table th { font-size: 7px; font-weight: 700; color: rgba(62,252,255,0.5); letter-spacing: 1px; text-transform: uppercase; padding: 4px 6px 8px; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .lb-table td { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); padding: 5px 6px; border-bottom: 1px solid rgba(62,252,255,0.08); }
         .lb-table tr.lb-current td { color: #3efcff; text-shadow: 0 0 8px rgba(62,252,255,0.4); }
         .lb-table tr.lb-gold td { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
         .lb-table td:first-child { color: rgba(255,215,0,0.6); font-size: 11px; }
@@ -376,7 +376,7 @@
             <div class="lb-section">
                 <div class="lb-title">LEADERBOARD — TOP 10</div>
                 <table class="lb-table" id="lbTable">
-                    <thead><tr><th>#</th><th>PLAYER</th><th>DEATHS</th><th>TIME</th><th>STREAK</th><th>DATE</th></tr></thead>
+                    <thead><tr><th>#</th><th>PLAYER</th><th>KILLS</th><th>DEATHS</th><th>TIME</th><th>K/D</th><th>STREAK</th><th>DATE</th></tr></thead>
                     <tbody id="lbBody"></tbody>
                 </table>
                 <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
@@ -541,8 +541,11 @@
                     if (isCurrent) { tr.className = 'lb-current'; matched = true; }
                     if (i === 0) tr.className = (tr.className || '') + ' lb-gold';
                     var m = Math.floor(r.time / 60); var s = r.time % 60;
+                    var kills = r.kills || 0;
+                    var deaths = r.deaths || 0;
+                    var kd = deaths === 0 ? kills : (kills / deaths).toFixed(2);
                     var displayName = (r.name || 'Unknown').length > 12 ? (r.name || 'Unknown').substring(0, 12) + '..' : (r.name || 'Unknown');
-                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + r.deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + (r.streak || 0) + '</td><td>' + (r.date || '-') + '</td>';
+                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + displayName + '</td><td>' + kills + '</td><td>' + deaths + '</td><td>' + m + ':' + String(s).padStart(2, '0') + '</td><td>' + kd + '</td><td>' + (r.streak || 0) + '</td><td>' + (r.date || '-') + '</td>';
                     body.appendChild(tr);
                 }
             } catch (e) {}
