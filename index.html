@@ -152,6 +152,15 @@
         @keyframes victorySlideIn { 0% { opacity: 0; transform: translateY(40px) scale(0.9); } 60% { opacity: 1; transform: translateY(-5px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes victoryPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px #ffd700); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 35px #ffd700) drop-shadow(0 0 70px rgba(255,215,0,0.5)); } }
 
+        /* ═══ GAME OVER VARIANT ═══ */
+        .victory-screen.game-over .victory-flash { animation: gameOverFlash 1.5s ease-out forwards; }
+        @keyframes gameOverFlash { 0% { background: rgba(255,0,0,0.5); } 100% { background: transparent; } }
+        .victory-screen.game-over .victory-icon { color: #ff3333; filter: drop-shadow(0 0 25px #ff3333); }
+        .victory-screen.game-over .victory-title { color: #ff3333; text-shadow: 0 0 30px rgba(255,50,50,0.7), 0 0 60px rgba(255,50,50,0.4), 0 0 100px rgba(255,50,50,0.2); animation: gameOverGlow 3s ease-in-out infinite; }
+        @keyframes gameOverGlow { 0%, 100% { text-shadow: 0 0 30px rgba(255,50,50,0.7), 0 0 60px rgba(255,50,50,0.4); } 50% { text-shadow: 0 0 40px rgba(255,50,50,0.9), 0 0 80px rgba(255,50,50,0.6), 0 0 120px rgba(255,50,50,0.3); } }
+        .victory-screen.game-over .victory-divider { background: linear-gradient(90deg, transparent, #ff3333, transparent); box-shadow: 0 0 12px rgba(255,50,50,0.5); }
+        .victory-screen.game-over .lb-title { color: #ff3333; text-shadow: 0 0 10px rgba(255,50,50,0.4); }
+
         /* ═══ HUNT BRIEFING POPUP ═══ */
         .hunt-briefing { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2500; display: none; align-items: center; justify-content: center; pointer-events: none; }
         .hunt-briefing.active { display: flex; }
@@ -394,6 +403,7 @@
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, maxStreak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
         var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 5, huntDone = false;
+        var deathLimit = 10;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
         var armorBar = $('armorBar'), armorText = $('armorText');
@@ -477,6 +487,29 @@
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
             }
         }
+        function showGameOver() {
+            huntDone = true;
+            if (huntInterval) clearInterval(huntInterval);
+            var timeSec = huntStart ? Math.floor((Date.now() - huntStart) / 1000) : 0;
+            var m = Math.floor(timeSec / 60); var s = timeSec % 60;
+            var tStr = m + ':' + String(s).padStart(2, '0');
+            timerDisp.textContent = tStr;
+            timerDisp.style.color = '#ff3333';
+            timerDisp.style.textShadow = '0 0 12px #ff3333';
+            $('victoryTime').textContent = tStr;
+            $('victoryKills').textContent = S.kills + '/' + huntTarget;
+            $('victoryDeaths').textContent = S.deaths;
+            var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths).toFixed(2);
+            $('victoryKD').textContent = kd;
+            $('victoryScreen').querySelector('.victory-icon').innerHTML = '&#x1F480;';
+            $('victoryScreen').querySelector('.victory-title').textContent = 'GAME OVER';
+            $('victoryScreen').querySelector('.victory-subtitle').textContent = S.kills + '/' + huntTarget + ' — YOU HAVE FALLEN';
+            saveRun(S.deaths, timeSec, tStr, S.maxStreak);
+            renderLeaderboard(S.deaths, timeSec);
+            var vs = $('victoryScreen');
+            vs.classList.add('active');
+            vs.classList.add('game-over');
+        }
         function saveRun(deaths, timeSec, timeStr, maxStreak) {
             try {
                 var runs = JSON.parse(localStorage.getItem('dino_hunt_lb') || '[]');
@@ -509,11 +542,20 @@
             } catch (e) {}
         }
         function restartHunt() {
-            // Teleport to same room = full restart (NPCs respawn, timer resets)
+            // Hide victory/game-over screen
+            var vs = $('victoryScreen');
+            vs.classList.remove('active');
+            vs.classList.remove('game-over');
+            // Reset state
+            huntDone = false; S.kills = 0; S.deaths = 0; S.streak = 0; S.maxStreak = 0;
+            updateScore(); updateStreak();
+            // Fire room-side restart tasks
             if (typeof PortalsSdk !== 'undefined') {
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
             }
+            // Reload page for clean state (NPCs, timer, radar)
+            setTimeout(function() { window.location.reload(); }, 500);
         }
         var huntBriefTimer = null;
         function showHuntBrief() { $('huntBriefing').classList.add('active'); huntBriefTimer = setTimeout(dismissHuntBrief, 6000); }
@@ -654,12 +696,12 @@
                 case 'health': updateHealth(val); break;
                 case 'armor': updateArmor(val); break;
                 case 'kill': S.kills = val; S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak; updateScore(); updateStreak(); checkStreakMilestone(); if (val > 0) { addKillFeed(); removeNearestNPC(); } if (huntMode && !huntDone && S.kills >= huntTarget) { huntDone = true; if (huntInterval) clearInterval(huntInterval); var el2 = Math.floor((Date.now() - huntStart) / 1000); var tm2 = Math.floor(el2 / 60); var ts2 = el2 % 60; var tStr = tm2 + ':' + String(ts2).padStart(2, '0'); timerDisp.textContent = tStr; timerDisp.style.color = '#ffd700'; timerDisp.style.textShadow = '0 0 12px #ffd700'; showVictory(tStr, S.kills, S.deaths); } break;
-                case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); break;
+                case 'death': S.deaths = isNaN(val) ? S.deaths + 1 : val; S.streak = 0; updateScore(); updateStreak(); if (huntMode && !huntDone && S.deaths >= deathLimit) { showGameOver(); } break;
                 case 'timer': updateTimer(val); break;
                 case 'boost': setBoost(val); break;
                 case 'start': if (val === 1) showOverlay('MATCH START', 'FIGHT FOR SURVIVAL', '#3efcff', 2500); break;
                 case 'gameover': if (val === 1) { var kd2 = S.deaths === 0 ? S.kills : (S.kills / S.deaths).toFixed(2); showOverlay('MATCH OVER', S.kills + ' KILLS  /  K/D: ' + kd2, '#ffd700', 5000); } break;
-                case 'dead': if (val === 1) { S.deaths++; S.streak = 0; updateScore(); updateStreak(); showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000); } break;
+                case 'dead': if (val === 1) { S.deaths++; S.streak = 0; updateScore(); updateStreak(); if (huntMode && !huntDone && S.deaths >= deathLimit) { showGameOver(); } else { showOverlay('ELIMINATED', 'RESPAWNING...', '#ff3333', 2000); } } break;
                 case 'respawn': if (val === 1) { updateHealth(100); S.streak = 0; updateStreak(); } break;
             }
         }
