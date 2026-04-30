@@ -381,7 +381,7 @@
                 </table>
                 <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
             </div>
-            <button class="hunt-again-btn" id="huntAgainBtn" onclick="restartHunt()">HUNT AGAIN</button>
+            <button class="hunt-again-btn" id="huntAgainBtn">HUNT AGAIN</button>
         </div>
     </div>
 
@@ -708,6 +708,7 @@
             if (msg === 'briefing_dismiss') { selectMission('arena'); return; }
             if (msg === 'enter_arena') { selectMission('arena'); autoCountdownStarted = true; $('briefingSkip').style.display = 'none'; startHuntTimer(); return; }
             if (msg === 'dismiss_hunt_brief') { dismissHuntBrief(); return; }
+            if (msg === 'restart_hunt') { restartHunt(); return; }
             if (msg === 'cam_tps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_tps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_tps',TaskTargetState:'SetNotActiveToActive'})); } return; }
             if (msg === 'cam_fps') { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_cam_fps',TaskTargetState:'SetNotActiveToActive'})); PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'cam_fps',TaskTargetState:'SetNotActiveToActive'})); } return; }
             var sep = msg.indexOf('_'); if (sep === -1) return;
@@ -729,6 +730,15 @@
 
         if (typeof PortalsSdk !== 'undefined') { PortalsSdk.setMessageListener(function(message) { handleMsg(message); }); }
         window.addEventListener('message', function(e) { var d = e.data; if (typeof d === 'string') handleMsg(d); else if (d && d.type === 'portals') handleMsg(d.data); if (!drumsPlaying) tryPlayDrums(); });
+
+        // Hunt Again button — attach via JS (onclick blocked in Portals iframes)
+        $('huntAgainBtn').addEventListener('click', function(e) { e.preventDefault(); restartHunt(); });
+        $('huntAgainBtn').addEventListener('touchend', function(e) { e.preventDefault(); restartHunt(); });
+        // Keyboard shortcut: press R or Enter when victory/game-over screen is active
+        document.addEventListener('keydown', function(e) {
+            if (!$('victoryScreen').classList.contains('active')) return;
+            if (e.key === 'r' || e.key === 'R' || e.key === 'Enter') { restartHunt(); }
+        });
 
         var hudVisible = true;
         function toggleHud() { hudVisible = !hudVisible; $('hudElements').classList.toggle('hud-hidden', !hudVisible); $('hudToggle').classList.toggle('hidden', !hudVisible); }
