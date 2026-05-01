@@ -381,7 +381,7 @@
                 </table>
                 <div class="lb-empty" id="lbEmpty">NO RUNS RECORDED YET</div>
             </div>
-            <button class="hunt-again-btn" id="huntAgainBtn">HUNT AGAIN</button>
+            <button class="hunt-again-btn" id="huntAgainBtn" onclick="restartHunt()">HUNT AGAIN</button>
         </div>
     </div>
 
@@ -402,7 +402,7 @@
 
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, maxStreak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
-        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 5, huntDone = false;
+        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 55, huntDone = false;
         var deathLimit = 10;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
@@ -486,6 +486,10 @@
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
                 PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_hunt_complete',TaskTargetState:'SetNotActiveToActive'}));
             }
+            // Re-enable pointer events so Hunt Again button is clickable
+            document.documentElement.style.pointerEvents = '';
+            document.body.style.pointerEvents = '';
+            try { if (typeof PortalsSdk !== 'undefined') PortalsSdk.setPointerEventsEnabled(true); } catch(e) {}
         }
         function showGameOver() {
             huntDone = true;
@@ -509,6 +513,10 @@
             var vs = $('victoryScreen');
             vs.classList.add('active');
             vs.classList.add('game-over');
+            // Re-enable pointer events so Hunt Again button is clickable
+            document.documentElement.style.pointerEvents = '';
+            document.body.style.pointerEvents = '';
+            try { if (typeof PortalsSdk !== 'undefined') PortalsSdk.setPointerEventsEnabled(true); } catch(e) {}
         }
         // In-memory leaderboard (localStorage blocked in cross-origin iframes)
         var lbRuns = [];
@@ -573,6 +581,10 @@
                 for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1]]);
                 // Restart hunt timer
                 startHuntTimer();
+                // Disable pointer events and return control to game
+                document.documentElement.style.pointerEvents = 'none';
+                document.body.style.pointerEvents = 'none';
+                try { if (typeof PortalsSdk !== 'undefined') { PortalsSdk.setPointerEventsEnabled(false); PortalsSdk.focusGameKeyboard(); } } catch(ex) {}
             } catch(e) { console.error('[HUD] restartHunt error:', e); }
         }
         var huntBriefTimer = null;
@@ -731,7 +743,7 @@
         if (typeof PortalsSdk !== 'undefined') { PortalsSdk.setMessageListener(function(message) { handleMsg(message); }); }
         window.addEventListener('message', function(e) { var d = e.data; if (typeof d === 'string') handleMsg(d); else if (d && d.type === 'portals') handleMsg(d.data); if (!drumsPlaying) tryPlayDrums(); });
 
-        // Hunt Again button — attach via JS (onclick blocked in Portals iframes)
+        // Hunt Again button — redundant JS listener backup (onclick is primary)
         $('huntAgainBtn').addEventListener('click', function(e) { e.preventDefault(); restartHunt(); });
         $('huntAgainBtn').addEventListener('touchend', function(e) { e.preventDefault(); restartHunt(); });
         // Keyboard shortcut: press R or Enter when victory/game-over screen is active
