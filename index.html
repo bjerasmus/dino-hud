@@ -213,9 +213,9 @@
         .briefing-title.visible { opacity: 1; transform: translateY(0) scale(1); }
         .briefing-subtitle { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 8px; text-transform: uppercase; color: rgba(180,210,240,0.7); text-shadow: 0 0 8px rgba(74,163,255,0.3); opacity: 0; transition: opacity 1s ease 0.4s; margin-bottom: 45px; }
         .briefing-subtitle.visible { opacity: 1; }
-        .briefing-lore { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 400; line-height: 2.0; color: rgba(210, 225, 240, 0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.9); text-align: center; max-width: 720px; min-height: 200px; margin-bottom: 30px; }
+        .briefing-lore { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 400; line-height: 2.0; color: rgba(210, 225, 240, 0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.9); text-align: center; max-width: 780px; min-height: 200px; margin-bottom: 30px; }
         .briefing-lore .lore-line { display: block; margin-bottom: 14px; }
-        .briefing-lore .lore-rhyme { color: #7ecfff; font-style: italic; font-size: 20px; font-weight: 500; text-shadow: 0 0 10px rgba(126,207,255,0.4), 0 1px 3px rgba(0,0,0,0.9); animation: rhymeGlow 3s ease-in-out infinite; }
+        .briefing-lore .lore-rhyme { color: #7ecfff; font-style: italic; font-size: 24px; font-weight: 500; text-shadow: 0 0 10px rgba(126,207,255,0.4), 0 1px 3px rgba(0,0,0,0.9); animation: rhymeGlow 3s ease-in-out infinite; }
         @keyframes rhymeGlow { 0%, 100% { text-shadow: 0 0 20px rgba(126,207,255,0.6), 0 0 40px rgba(74,163,255,0.3); } 50% { text-shadow: 0 0 30px rgba(126,207,255,0.8), 0 0 60px rgba(74,163,255,0.5), 0 0 80px rgba(74,163,255,0.2); } }
         .briefing-cursor { display: inline-block; width: 2px; height: 1.1em; background: #7ecfff; margin-left: 2px; vertical-align: text-bottom; animation: blink 0.7s step-end infinite; box-shadow: 0 0 8px rgba(126,207,255,0.6); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -238,7 +238,7 @@
         .mission-mode { font-family: 'Bungee', cursive; font-size: 17px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
         .mission-card:not(.iceborne) .mission-mode { color: #3efcff; text-shadow: 0 0 12px #3efcff; }
         .mission-card.iceborne .mission-mode { color: #4aa3ff; text-shadow: 0 0 12px #4aa3ff, 0 0 25px rgba(74,163,255,0.3); }
-        .mission-desc { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 400; color: rgba(200, 210, 220, 0.8); line-height: 1.6; letter-spacing: 1px; }
+        .mission-desc { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 400; color: rgba(200, 210, 220, 0.8); line-height: 1.6; letter-spacing: 1px; }
         .mission-icon { font-size: 36px; margin-bottom: 12px; filter: drop-shadow(0 0 12px currentColor); }
         .mission-card:not(.iceborne) .mission-icon { color: #3efcff; }
         .mission-card.iceborne .mission-icon { color: #4aa3ff; }
@@ -295,7 +295,7 @@
                     <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
-                        <div class="mission-desc">All 57 must die. Clock's ticking. Let's go.</div>
+                        <div class="mission-desc">Squad up. Hunt as a pack. Wipe them all out.</div>
                     </div>
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
@@ -810,10 +810,10 @@
         // Typewriter
         var LORE_LINES = [
             { text: 'The Iceborne have taken the arena. 57 savage beasts. Armed. Angry. Waiting.', cls: 'lore-line' },
-            { text: 'They own the ground. They hold the high platforms. Nobody has cleared them all.', cls: 'lore-line' },
-            { text: 'Gear up. Grab every weapon, potion and helmet you can find.', cls: 'lore-line', prePause: 400 },
+            { text: 'They own the ground. They hold the high platforms. No hunting party has cleared them all.', cls: 'lore-line' },
+            { text: 'Gear up. Grab every weapon, potion and helmet you can find. Work together or die alone.', cls: 'lore-line', prePause: 400 },
             { text: 'Kill fast. Die less. Break the record.', cls: 'lore-rhyme', prePause: 500 },
-            { text: ' Now get in there and show them who\'s the apex predator.', cls: 'lore-rhyme' }
+            { text: ' Now get in there and show them who\'s top of the food chain.', cls: 'lore-rhyme' }
         ];
         var twLineIdx = 0, twCharIdx = 0, twTimer = null, twCurrentSpan = null;
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
