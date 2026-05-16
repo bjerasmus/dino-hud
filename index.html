@@ -295,7 +295,7 @@
                     <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
-                        <div class="mission-desc">Hunt all 57 dinos. Fastest time wins.</div>
+                        <div class="mission-desc">Hunt all 57 Iceborne. Fastest time wins.</div>
                     </div>
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
@@ -392,7 +392,7 @@
             <div class="hunt-briefing-icon">&#x1F3AF;</div>
             <div class="hunt-briefing-title">THE HUNT BEGINS</div>
             <div class="hunt-briefing-text">
-                Hunt and destroy all <em>57 Dinos</em> across the arena.<br>
+                Hunt and destroy all <em>57 Iceborne</em> across the arena.<br>
                 Collect weapons, potions and helmets to survive.<br>
                 <em>Fewest deaths. Fastest time. Ultimate Hunter.</em>
             </div>
@@ -601,21 +601,21 @@
         // Static NPC positions [x, z] from room data (57 NPCs, updated v166)
         // NPC_POS: [x, z, elevated] — elevated=1 (platform Y>5), elevated=0 (ground)
         var NPC_POS = [
-            [-354.6,-141.3,1],[-341.8,-117.9,1],[-324.0,-123.0,0],[-311.5,-28.9,1],
-            [-309.9,-111.3,1],[-308.0,-190.2,1],[-305.5,-91.0,0],[-304.6,-144.0,0],
-            [-300.0,-70.0,0],[-282.0,-139.7,0],[-270.9,-63.3,0],[-269.2,-206.1,1],
-            [-266.1,-208.0,0],[-262.7,-21.3,0],[-260.0,-100.0,0],[-258.3,-112.5,1],
-            [-251.4,-211.3,0],[-250.0,-60.0,0],[-247.8,-222.2,1],[-246.1,-230.1,1],
-            [-245.6,-249.2,1],[-244.7,-5.0,0],[-243.2,-139.4,1],[-240.0,-30.0,0],
-            [-239.7,-57.2,0],[-230.8,-191.3,1],[-229.9,-110.5,0],[-227.1,-153.1,1],
-            [-219.4,-2.7,1],[-217.0,-30.2,1],[-215.7,-236.9,0],[-214.1,13.2,0],
-            [-211.7,-30.0,0],[-208.4,-61.0,0],[-206.7,-19.9,1],[-199.3,-53.6,0],
-            [-196.6,-174.0,0],[-193.7,-132.2,1],[-191.1,-11.4,1],[-190.1,-85.4,0],
-            [-182.5,-206.8,1],[-176.0,-73.4,0],[-172.9,-153.2,0],[-170.0,-140.0,0],
-            [-166.1,-27.6,0],[-164.6,-20.0,1],[-158.0,-223.6,0],[-155.8,-103.7,0],
-            [-146.8,-48.9,0],[-145.9,-111.0,0],[-340.0,-190.0,0],[-137.8,-101.2,0],
-            [-137.1,-137.3,0],[-128.8,-67.3,0],[-126.5,-16.8,0],[-340.0,-210.0,0],
-            [-340.0,-230.0,0]
+            [-354.6,-141.3,1],[-341.8,-117.9,1],[-340,-230,0],[-340,-210,0],
+            [-340,-190,0],[-324.0,-123,0],[-311.5,-28.9,1],[-309.9,-111.3,1],
+            [-308,-190.2,1],[-305.5,-91.0,0],[-304.6,-144.0,0],[-300,-70,0],
+            [-282.0,-139.7,0],[-270.9,-63.3,0],[-269.2,-206.1,1],[-266.1,-208.0,0],
+            [-262.7,-21.3,0],[-260,-100,0],[-258.3,-112.5,1],[-251.4,-211.3,0],
+            [-250,-60,0],[-247.8,-222.2,1],[-246.4,-230.0,1],[-245.6,-249.2,1],
+            [-244.7,-5.0,0],[-243.2,-139.4,1],[-240,-30,0],[-239.7,-57.2,0],
+            [-230.8,-191.3,1],[-229.9,-110.5,0],[-227.1,-153.1,1],[-219.4,-2.7,1],
+            [-217,-30.2,1],[-215.7,-236.9,0],[-214.1,13.2,0],[-211.7,-30.0,0],
+            [-208.4,-61.0,0],[-206.7,-19.9,1],[-199.3,-53.6,0],[-196.6,-174.0,0],
+            [-193.7,-132.2,1],[-191.1,-11.4,1],[-190.1,-85.4,0],[-182.5,-206.8,1],
+            [-176.0,-73.4,0],[-172.9,-153.2,0],[-170,-140,0],[-166.1,-27.6,0],
+            [-164.6,-20.0,1],[-158.0,-223.6,0],[-155.8,-103.7,0],[-146.8,-48.9,0],
+            [-145.9,-111.0,0],[-137.8,-101.2,0],[-137.1,-137.3,0],[-128.8,-67.3,0],
+            [-126.5,-16.8,0]
         ];
         // Keep pristine copy for restart
         var NPC_POS_ORIG = [];
@@ -809,7 +809,7 @@
 
         // Typewriter
         var LORE_LINES = [
-            { text: 'The arena. A forgotten ruin overrun by savage dinos armed to the teeth.', cls: 'lore-line' },
+            { text: 'The arena. A frozen ruin overrun by savage Iceborne armed to the teeth.', cls: 'lore-line' },
             { text: '57 hostiles. Scattered across the ground and high platforms.', cls: 'lore-line' },
             { text: 'Grab a weapon. Collect potions and helmets for the edge you need.', cls: 'lore-line', prePause: 400 },
             { text: 'Hunt them all. Die less. Be fast.', cls: 'lore-rhyme', prePause: 500 },
