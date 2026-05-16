@@ -295,7 +295,7 @@
                     <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
-                        <div class="mission-desc">Hunt all 57 Iceborne. Fastest time wins.</div>
+                        <div class="mission-desc">All 57 must die. Clock's ticking. Let's go.</div>
                     </div>
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
@@ -303,7 +303,7 @@
                     <div class="mission-card iceborne" id="missionIceborne" onclick="selectMission('iceborne')">
                         <div class="mission-icon">&#x2744;</div>
                         <div class="mission-mode">Battle of the Iceborne</div>
-                        <div class="mission-desc">Clear every platform and path. No dino left standing.</div>
+                        <div class="mission-desc">Every platform. Every corner. Total annihilation.</div>
                     </div>
                 </div>
             </div>
@@ -392,9 +392,9 @@
             <div class="hunt-briefing-icon">&#x1F3AF;</div>
             <div class="hunt-briefing-title">THE HUNT BEGINS</div>
             <div class="hunt-briefing-text">
-                Hunt and destroy all <em>57 Iceborne</em> across the arena.<br>
-                Collect weapons, potions and helmets to survive.<br>
-                <em>Fewest deaths. Fastest time. Ultimate Hunter.</em>
+                <em>57 Iceborne</em> are loose in the arena. Wipe them out.<br>
+                Loot weapons, potions and helmets. Stay alive.<br>
+                <em>Fastest clear. Fewest deaths. Become the Ultimate Hunter.</em>
             </div>
             <button class="hunt-briefing-skip" id="huntBriefSkip" onclick="dismissHuntBrief()">GOT IT</button>
         </div>
@@ -809,11 +809,11 @@
 
         // Typewriter
         var LORE_LINES = [
-            { text: 'The arena. A frozen ruin overrun by savage Iceborne armed to the teeth.', cls: 'lore-line' },
-            { text: '57 hostiles. Scattered across the ground and high platforms.', cls: 'lore-line' },
-            { text: 'Grab a weapon. Collect potions and helmets for the edge you need.', cls: 'lore-line', prePause: 400 },
-            { text: 'Hunt them all. Die less. Be fast.', cls: 'lore-rhyme', prePause: 500 },
-            { text: ' Only the Ultimate Hunter walks out alive...', cls: 'lore-rhyme' }
+            { text: 'The Iceborne have taken the arena. 57 savage beasts. Armed. Angry. Waiting.', cls: 'lore-line' },
+            { text: 'They own the ground. They hold the high platforms. Nobody has cleared them all.', cls: 'lore-line' },
+            { text: 'Gear up. Grab every weapon, potion and helmet you can find.', cls: 'lore-line', prePause: 400 },
+            { text: 'Kill fast. Die less. Break the record.', cls: 'lore-rhyme', prePause: 500 },
+            { text: ' Now get in there and show them who\'s the apex predator.', cls: 'lore-rhyme' }
         ];
         var twLineIdx = 0, twCharIdx = 0, twTimer = null, twCurrentSpan = null;
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
