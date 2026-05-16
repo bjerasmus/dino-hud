@@ -288,14 +288,14 @@
             <div class="lightning-flash" id="lightningFlash"></div>
             <div class="briefing-content">
                 <div class="briefing-title" id="briefingTitle">DINODAWGS</div>
-                <div class="briefing-subtitle" id="briefingSubtitle">War Council Briefing</div>
+                <div class="briefing-subtitle" id="briefingSubtitle">Battle Briefing</div>
                 <div class="briefing-lore" id="briefingLore"></div>
                 <div class="briefing-divider" id="briefingDivider"></div>
                 <div class="briefing-missions" id="briefingMissions">
                     <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
                         <div class="mission-icon">&#x2694;</div>
                         <div class="mission-mode">Arena Deathmatch</div>
-                        <div class="mission-desc">Free-for-all. 8 players. First to 20 kills.</div>
+                        <div class="mission-desc">Hunt all 57 dinos. Fastest time wins.</div>
                     </div>
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
@@ -303,7 +303,7 @@
                     <div class="mission-card iceborne" id="missionIceborne" onclick="selectMission('iceborne')">
                         <div class="mission-icon">&#x2744;</div>
                         <div class="mission-mode">Battle of the Iceborne</div>
-                        <div class="mission-desc">Clear the arena. Kill them all. Face Koldhart.</div>
+                        <div class="mission-desc">Clear every platform and path. No dino left standing.</div>
                     </div>
                 </div>
             </div>
@@ -392,8 +392,8 @@
             <div class="hunt-briefing-icon">&#x1F3AF;</div>
             <div class="hunt-briefing-title">THE HUNT BEGINS</div>
             <div class="hunt-briefing-text">
-                Destroy all <em>55 IceBorne</em> scattered across the arena.<br>
-                The clock is ticking. Every second counts.<br>
+                Hunt and destroy all <em>57 Dinos</em> across the arena.<br>
+                Collect weapons, potions and helmets to survive.<br>
                 <em>Fewest deaths. Fastest time. Ultimate Hunter.</em>
             </div>
             <button class="hunt-briefing-skip" id="huntBriefSkip" onclick="dismissHuntBrief()">GOT IT</button>
@@ -402,7 +402,7 @@
 
     <script>
         var S = { hp: 100, armor: 0, kills: 0, deaths: 0, streak: 0, maxStreak: 0, weapon: 'none', clip: 0, reserve: 0, timerActive: false, timerSec: 0 };
-        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 55, huntDone = false;
+        var huntMode = false, huntStart = 0, huntInterval = null, huntTarget = 57, huntDone = false;
         var deathLimit = 10;
         var $ = function(id) { return document.getElementById(id); };
         var healthBar = $('healthBar'), healthText = $('healthText');
@@ -459,7 +459,7 @@
             healthBar.classList.toggle('pulse-red', S.hp > 0 && S.hp < 25);
         }
         function updateArmor(val) { var old = S.armor; S.armor = Math.max(0, Math.min(200, val)); armorBar.style.width = (S.armor / 200 * 100) + '%'; armorText.textContent = Math.round(S.armor); armorBar.classList.toggle('pulse-blue', S.armor > 0 && S.armor < 50); if (S.armor > old) { var gained = Math.round(S.armor - old); if (gained >= 5) showPickup('+' + gained + ' ARMOR', '#4aa3ff'); } }
-        function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } }
+        function updateWeapon(type) { S.weapon = type.toLowerCase(); weaponName.textContent = S.weapon === 'none' ? 'UNARMED' : S.weapon.toUpperCase(); weaponIcon.innerHTML = WEAPON_IMG[S.weapon] || WEAPON_IMG.none; if (S.weapon === 'none') { ammoDisp.textContent = '-- / --'; ammoDisp.className = 'ammo-display'; } else { updateAmmo(30, 270); } }
         function updateAmmo(clip, reserve) { S.clip = Math.max(0, clip); S.reserve = Math.max(0, reserve); if (S.weapon === 'none') return; ammoDisp.textContent = S.clip + ' / ' + S.reserve; ammoDisp.className = 'ammo-display'; if (S.clip === 0) ammoDisp.classList.add('ammo-empty'); else if (S.clip <= 3) ammoDisp.classList.add('ammo-low'); }
         function updateScore() { killsVal.textContent = huntMode ? S.kills + '/' + huntTarget : S.kills; deathsVal.textContent = S.deaths; var kd = S.deaths === 0 ? S.kills : (S.kills / S.deaths); kdRatio.textContent = 'K/D: ' + kd.toFixed(2); }
         function updateStreak() { var label = ''; for (var i = 0; i < STREAKS.length; i++) { if (S.streak >= STREAKS[i][0]) { label = STREAKS[i][1]; break; } } if (label) { streakBadge.textContent = label; streakBadge.classList.add('active'); } else { streakBadge.classList.remove('active'); } }
@@ -578,7 +578,7 @@
                 timerDisp.classList.remove('timer-warning');
                 // Restore all NPC radar dots
                 NPC_POS.length = 0;
-                for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1]]);
+                for (var ri = 0; ri < NPC_POS_ORIG.length; ri++) NPC_POS.push([NPC_POS_ORIG[ri][0], NPC_POS_ORIG[ri][1], NPC_POS_ORIG[ri][2]]);
                 // Restart hunt timer
                 startHuntTimer();
                 // Disable pointer events and return control to game
@@ -594,30 +594,32 @@
         function startHuntTimer() { huntMode = true; huntStart = Date.now(); huntDone = false; S.timerActive = true; timerPanel.classList.add('active'); if (huntInterval) clearInterval(huntInterval); huntInterval = setInterval(function() { if (huntDone) return; var sec = Math.floor((Date.now() - huntStart) / 1000); var m = Math.floor(sec / 60); var s = sec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.remove('timer-warning'); }, 250); }
 
         // ══ MINIMAP (RADAR STYLE) ══
-        var MM = { size: 160, radius: 80, range: 120 };
+        var MM = { size: 160, radius: 80, range: 300 };
         var mmCanvas = $('minimapCanvas'), mmCtx = mmCanvas.getContext('2d');
         var mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
         var mmAllPos = {}, mmAllRot = {};
-        // Static NPC positions [x, z] from room data (55 NPCs, updated v165)
+        // Static NPC positions [x, z] from room data (57 NPCs, updated v166)
+        // NPC_POS: [x, z, elevated] — elevated=1 (platform Y>5), elevated=0 (ground)
         var NPC_POS = [
-            [-354.6,-141.3],[-341.8,-117.9],[-324.0,-123],[-311.5,-28.9],
-            [-309.9,-111.3],[-308,-190.2],[-305.5,-91.0],[-304.6,-144.0],
-            [-300,-70],[-282.0,-139.7],[-269.2,-206.1],[-270.9,-63.3],
-            [-262.7,-21.3],[-260,-100],[-258.3,-112.5],[-250,-60],
-            [-247.8,-222.2],[-246.7,-216.6],[-245.6,-249.2],[-244.7,-5.0],
-            [-243.2,-139.4],[-240,-30],[-239.7,-57.2],[-230.8,-191.3],
-            [-229.9,-110.5],[-227.1,-153.1],[-219.4,-2.7],[-217,-30.2],
-            [-215.7,-236.9],[-214.1,13.2],[-211.7,-30.0],[-208.4,-61.0],
-            [-206.7,-19.9],[-199.3,-53.6],[-196.6,-174.0],[-193.7,-132.2],
-            [-191.1,-11.4],[-190.1,-85.4],[-182.5,-206.8],[-176.0,-73.4],
-            [-172.9,-153.2],[-170,-140],[-166.1,-27.6],[-164.6,-20.0],
-            [-158.0,-223.6],[-155.8,-103.7],[-146.8,-48.9],[-145.9,-111.0],
-            [-142.4,59.8],[-137.8,-101.2],[-137.1,-137.3],[-128.8,-67.3],
-            [-126.8,-16.0],[-91.5,44.2],[-78.5,45.5]
+            [-354.6,-141.3,1],[-341.8,-117.9,1],[-324.0,-123.0,0],[-311.5,-28.9,1],
+            [-309.9,-111.3,1],[-308.0,-190.2,1],[-305.5,-91.0,0],[-304.6,-144.0,0],
+            [-300.0,-70.0,0],[-282.0,-139.7,0],[-270.9,-63.3,0],[-269.2,-206.1,1],
+            [-266.1,-208.0,0],[-262.7,-21.3,0],[-260.0,-100.0,0],[-258.3,-112.5,1],
+            [-251.4,-211.3,0],[-250.0,-60.0,0],[-247.8,-222.2,1],[-246.1,-230.1,1],
+            [-245.6,-249.2,1],[-244.7,-5.0,0],[-243.2,-139.4,1],[-240.0,-30.0,0],
+            [-239.7,-57.2,0],[-230.8,-191.3,1],[-229.9,-110.5,0],[-227.1,-153.1,1],
+            [-219.4,-2.7,1],[-217.0,-30.2,1],[-215.7,-236.9,0],[-214.1,13.2,0],
+            [-211.7,-30.0,0],[-208.4,-61.0,0],[-206.7,-19.9,1],[-199.3,-53.6,0],
+            [-196.6,-174.0,0],[-193.7,-132.2,1],[-191.1,-11.4,1],[-190.1,-85.4,0],
+            [-182.5,-206.8,1],[-176.0,-73.4,0],[-172.9,-153.2,0],[-170.0,-140.0,0],
+            [-166.1,-27.6,0],[-164.6,-20.0,1],[-158.0,-223.6,0],[-155.8,-103.7,0],
+            [-146.8,-48.9,0],[-145.9,-111.0,0],[-340.0,-190.0,0],[-137.8,-101.2,0],
+            [-137.1,-137.3,0],[-128.8,-67.3,0],[-126.5,-16.8,0],[-340.0,-210.0,0],
+            [-340.0,-230.0,0]
         ];
         // Keep pristine copy for restart
         var NPC_POS_ORIG = [];
-        for (var npi = 0; npi < NPC_POS.length; npi++) NPC_POS_ORIG.push([NPC_POS[npi][0], NPC_POS[npi][1]]);
+        for (var npi = 0; npi < NPC_POS.length; npi++) NPC_POS_ORIG.push([NPC_POS[npi][0], NPC_POS[npi][1], NPC_POS[npi][2]]);
         // Remove nearest NPC dot when a kill happens
         function removeNearestNPC() {
             if (NPC_POS.length === 0) return;
@@ -671,7 +673,7 @@
                 }
             }
             mmCtx.restore();
-            // NPC markers (orange diamonds)
+            // NPC markers (green=ground, yellow=elevated diamonds)
             mmCtx.save(); mmCtx.translate(r, r);
             for (var ni = 0; ni < NPC_POS.length; ni++) {
                 var ndx = NPC_POS[ni][0] - mmDX; var ndz = NPC_POS[ni][1] - mmDZ;
@@ -682,7 +684,8 @@
                 var nry = Math.sin(a) * ndx + Math.cos(a) * (-ndz);
                 nrx *= nscale; nry *= nscale;
                 if (Math.sqrt(nrx * nrx + nry * nry) < r - 4) {
-                    mmCtx.fillStyle = '#ff9800'; mmCtx.shadowColor = '#ff9800'; mmCtx.shadowBlur = 4;
+                    var npcCol = NPC_POS[ni][2] ? '#ffd700' : '#4caf50';
+                    mmCtx.fillStyle = npcCol; mmCtx.shadowColor = npcCol; mmCtx.shadowBlur = 4;
                     mmCtx.save(); mmCtx.translate(nrx, nry); mmCtx.rotate(Math.PI / 4);
                     mmCtx.fillRect(-2, -2, 4, 4);
                     mmCtx.restore();
@@ -806,11 +809,11 @@
 
         // Typewriter
         var LORE_LINES = [
-            { text: 'The North. Where the wind whips through you like steel through butter.', cls: 'lore-line' },
-            { text: 'Impassable. Inhospitable. Impenetrable.', cls: 'lore-line' },
-            { text: 'The Iceborne were led by the most enigmatic of warrior leaders... Koldhart.', cls: 'lore-line', prePause: 400 },
-            { text: 'Heart of black. Eyes of blue.', cls: 'lore-rhyme', prePause: 500 },
-            { text: ' Sleep now child, lest Koldhart get you...', cls: 'lore-rhyme' }
+            { text: 'The arena. A forgotten ruin overrun by savage dinos armed to the teeth.', cls: 'lore-line' },
+            { text: '57 hostiles. Scattered across the ground and high platforms.', cls: 'lore-line' },
+            { text: 'Grab a weapon. Collect potions and helmets for the edge you need.', cls: 'lore-line', prePause: 400 },
+            { text: 'Hunt them all. Die less. Be fast.', cls: 'lore-rhyme', prePause: 500 },
+            { text: ' Only the Ultimate Hunter walks out alive...', cls: 'lore-rhyme' }
         ];
         var twLineIdx = 0, twCharIdx = 0, twTimer = null, twCurrentSpan = null;
         var twCursor = document.createElement('span'); twCursor.className = 'briefing-cursor';
