@@ -221,13 +221,13 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .briefing-divider { width: 200px; height: 1px; background: linear-gradient(90deg, transparent, rgba(74,163,255,0.4), rgba(150,200,255,0.6), rgba(74,163,255,0.4), transparent); margin: 15px auto 25px; opacity: 0; transition: opacity 0.8s ease, width 0.8s ease; }
         .briefing-divider.visible { opacity: 1; width: 300px; }
-        .briefing-missions { display: flex; gap: 20px; opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease, transform 0.8s ease; margin-top: 10px; align-items: center; justify-content: center; }
+        .briefing-missions { display: flex; gap: 20px; opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease, transform 0.8s ease; margin-top: 10px; align-items: stretch; justify-content: center; }
         .briefing-missions.visible { opacity: 1; transform: translateY(0); }
         .neon-logo { width: 120px; flex-shrink: 0; pointer-events: none; align-self: center; display: flex; flex-direction: column; align-items: center; }
         .enter-arena-btn { display: none; }
         .neon-logo img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
         @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
-        .mission-card { width: 290px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+        .mission-card { width: 220px; min-height: 200px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .mission-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent); transition: left 0.6s ease; }
         .mission-card:hover::before { left: 100%; }
         .mission-card::after { content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 2px; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
