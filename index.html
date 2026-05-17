@@ -227,7 +227,7 @@
         .enter-arena-btn { display: none; }
         .neon-logo img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
         @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
-        .mission-card { width: 220px; min-height: 200px; padding: 28px 22px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .mission-card { width: 220px; height: 220px; flex: 0 0 220px; padding: 24px 18px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .mission-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent); transition: left 0.6s ease; }
         .mission-card:hover::before { left: 100%; }
         .mission-card::after { content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 2px; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
@@ -236,7 +236,7 @@
         .mission-card.iceborne { border-color: rgba(74,163,255,0.3); }
         .mission-card.iceborne::after { background: linear-gradient(90deg, transparent, rgba(74,163,255,0.5), transparent); }
         .mission-card.iceborne:hover { border-color: #4aa3ff; box-shadow: 0 0 30px rgba(74,163,255,0.6), inset 0 0 25px rgba(74,163,255,0.15), 0 0 50px rgba(74,163,255,0.25), 0 8px 30px rgba(0,0,0,0.4); }
-        .mission-mode { font-family: 'Bungee', cursive; font-size: 17px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+        .mission-mode { font-family: 'Bungee', cursive; font-size: 13px; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
         .mission-card:not(.iceborne) .mission-mode { color: #3efcff; text-shadow: 0 0 12px #3efcff; }
         .mission-card.iceborne .mission-mode { color: #4aa3ff; text-shadow: 0 0 12px #4aa3ff, 0 0 25px rgba(74,163,255,0.3); }
         .mission-desc { font-family: 'Caveat', cursive; font-size: 20px; font-weight: 600; color: rgba(200, 210, 220, 0.85); line-height: 1.5; letter-spacing: 0.5px; }
