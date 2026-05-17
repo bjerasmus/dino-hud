@@ -182,7 +182,7 @@
         @keyframes dmgCrit { 0% { opacity: 1; background: radial-gradient(ellipse at center, rgba(255,0,0,0.15) 0%, rgba(255,0,0,0.7) 100%); } 25% { opacity: 0.9; } 100% { opacity: 0; } }
 
         /* ═══ BRIEFING SCREEN ═══ */
-        .briefing-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; pointer-events: none; opacity: 1; transition: opacity 0.8s ease; background: #000; }
+        .briefing-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; pointer-events: auto; opacity: 1; transition: opacity 0.8s ease; background: #000; }
         .briefing-screen.fade-out { opacity: 0; pointer-events: none; }
         .briefing-screen.hidden { display: none; }
         .briefing-screen.shake { animation: screenShake 0.15s ease-out; }
@@ -223,8 +223,9 @@
         .briefing-divider.visible { opacity: 1; width: 300px; }
         .briefing-missions { display: flex; gap: 20px; opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease, transform 0.8s ease; margin-top: 10px; align-items: stretch; justify-content: center; }
         .briefing-missions.visible { opacity: 1; transform: translateY(0); }
-        .neon-logo { width: 140px; flex-shrink: 0; pointer-events: none; align-self: center; display: flex; flex-direction: column; align-items: center; }
-        .enter-arena-btn { display: none; }
+        .neon-logo { width: 260px; flex-shrink: 0; pointer-events: auto; align-self: center; display: flex; flex-direction: column; align-items: center; }
+        .enter-arena-btn { pointer-events: auto; font-family: 'Bungee', cursive; font-size: 22px; letter-spacing: 4px; color: #000; background: linear-gradient(135deg, #3efcff, #00c8ff); border: none; border-radius: 10px; padding: 18px 50px; cursor: pointer; white-space: nowrap; text-transform: uppercase; box-shadow: 0 0 30px rgba(62,252,255,0.6), 0 4px 20px rgba(0,0,0,0.4); transition: all 0.3s ease; margin-bottom: 20px; }
+        .enter-arena-btn:hover { box-shadow: 0 0 40px rgba(62,252,255,0.8), 0 6px 25px rgba(0,0,0,0.4); background: linear-gradient(135deg, #6fffff, #26c6da); transform: scale(1.05); }
         .neon-logo img { width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
         @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
         .mission-card { width: 220px; height: 220px; flex: 0 0 220px; padding: 24px 18px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -293,6 +294,7 @@
                 <div class="briefing-divider" id="briefingDivider"></div>
                 <div class="briefing-missions" id="briefingMissions">
                     <div class="neon-logo" id="neonLogo">
+                        <button class="enter-arena-btn" id="enterArenaBtn" onclick="selectMission('arena')">ENTER ARENA</button>
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
                     </div>
                 </div>
