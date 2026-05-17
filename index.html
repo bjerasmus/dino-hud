@@ -562,6 +562,11 @@
         }
         function restartHunt() {
             try {
+                // Fire restart_hunt task in Unity to respawn player and reset NPCs
+                if (typeof PortalsSdk !== 'undefined') {
+                    PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
+                    PortalsSdk.sendMessageToUnity(JSON.stringify({TaskName:'0_restart_hunt',TaskTargetState:'SetNotActiveToActive'}));
+                }
                 // Hide victory/game-over screen
                 var vs = $('victoryScreen');
                 vs.classList.remove('active');
@@ -597,7 +602,7 @@
         function startHuntTimer() { huntMode = true; huntStart = Date.now(); huntDone = false; S.timerActive = true; timerPanel.classList.add('active'); if (huntInterval) clearInterval(huntInterval); huntInterval = setInterval(function() { if (huntDone) return; var sec = Math.floor((Date.now() - huntStart) / 1000); var m = Math.floor(sec / 60); var s = sec % 60; timerDisp.textContent = m + ':' + String(s).padStart(2, '0'); timerDisp.classList.remove('timer-warning'); }, 250); }
 
         // ══ MINIMAP (RADAR STYLE) ══
-        var MM = { size: 160, radius: 80, range: 300 };
+        var MM = { size: 160, radius: 80, range: 150 };
         var mmCanvas = $('minimapCanvas'), mmCtx = mmCanvas.getContext('2d');
         var mmPX = 0, mmPZ = 0, mmRot = 0, mmMyName = null;
         var mmAllPos = {}, mmAllRot = {};
