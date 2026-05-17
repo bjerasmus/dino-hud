@@ -223,9 +223,9 @@
         .briefing-divider.visible { opacity: 1; width: 300px; }
         .briefing-missions { display: flex; gap: 20px; opacity: 0; transform: translateY(25px); transition: opacity 0.8s ease, transform 0.8s ease; margin-top: 10px; align-items: stretch; justify-content: center; }
         .briefing-missions.visible { opacity: 1; transform: translateY(0); }
-        .neon-logo { width: 120px; flex-shrink: 0; pointer-events: none; align-self: center; display: flex; flex-direction: column; align-items: center; }
+        .neon-logo { width: 260px; flex-shrink: 0; pointer-events: none; align-self: center; display: flex; flex-direction: column; align-items: center; }
         .enter-arena-btn { display: none; }
-        .neon-logo img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
+        .neon-logo img { width: 180px; height: 180px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(62,252,200,0.6)); animation: logoPulse 4s ease-in-out infinite; }
         @keyframes logoPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(62,252,200,0.5)) drop-shadow(0 0 20px rgba(62,252,200,0.2)); } 50% { filter: drop-shadow(0 0 16px rgba(62,252,200,0.7)) drop-shadow(0 0 35px rgba(62,252,200,0.4)); } }
         .mission-card { width: 220px; height: 220px; flex: 0 0 220px; padding: 24px 18px; background: rgba(5, 10, 20, 0.8); border: 2px solid rgba(62,252,255,0.3); border-radius: 14px; text-align: center; cursor: pointer; pointer-events: auto; transition: all 0.35s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .mission-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(62,252,255,0.1), transparent); transition: left 0.6s ease; }
@@ -292,18 +292,8 @@
                 <div class="briefing-lore" id="briefingLore"></div>
                 <div class="briefing-divider" id="briefingDivider"></div>
                 <div class="briefing-missions" id="briefingMissions">
-                    <div class="mission-card" id="missionArena" onclick="selectMission('arena')">
-                        <div class="mission-icon">&#x2694;</div>
-                        <div class="mission-mode">Arena Deathmatch</div>
-                        <div class="mission-desc">Squad up. Hunt as a pack.</div>
-                    </div>
                     <div class="neon-logo" id="neonLogo">
                         <img src="https://cdn.theportal.to/uploads/877ot1ivqysN2MBjGk8C4zPwBWq6vBwsyZ8xrZCAzzqJ/2026-03-06_d786a118c3c4f6373594a70805977d97.png" alt="DinoDawgs">
-                    </div>
-                    <div class="mission-card iceborne" id="missionIceborne" onclick="selectMission('iceborne')">
-                        <div class="mission-icon">&#x2744;</div>
-                        <div class="mission-mode">Battle of the Iceborne</div>
-                        <div class="mission-desc">Every platform. Every corner.</div>
                     </div>
                 </div>
             </div>
